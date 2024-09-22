@@ -4,8 +4,9 @@ const sg = sokol.gfx;
 
 const zigltf = @import("zigltf");
 const rowmath = @import("rowmath");
+const framework = @import("framework");
 // const utils = @import("utils");
-const Scene = @import("Scene.zig");
+const Scene = framework.Scene;
 // const gltf_fetcher = @import("gltf_fetcher.zig");
 
 // https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html
