@@ -22,7 +22,8 @@
         },
         // assets
         .@"gltf-test-models" = .{
-            .path = "../../../gltf-test-models",
+            .url = "git+https://github.com/ousttrue/gltf-test-models.git#55328b2d063141993373ab8c770c72d7cfda260f",
+            .hash = "1220aa78e130eb4c584dc21b408dcd26e8cfd30043e0f673ba6d229a0bfff592c54e",
         },
     },
     .paths = .{

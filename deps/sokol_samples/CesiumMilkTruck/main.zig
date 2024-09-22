@@ -4,9 +4,9 @@ const sg = sokol.gfx;
 
 const zigltf = @import("zigltf");
 const rowmath = @import("rowmath");
-// const utils = @import("utils");
-const Scene = @import("Scene.zig");
-// const gltf_fetcher = @import("gltf_fetcher.zig");
+const framework = @import("framework");
+const Scene = framework.Scene;
+const gltf_fetcher = framework.gltf_fetcher;
 
 const state = struct {
     var pass_action = sg.PassAction{};
@@ -15,6 +15,8 @@ const state = struct {
     var gltf: ?std.json.Parsed(zigltf.Gltf) = null;
     var scene = Scene{};
 };
+
+const load_file = "glTF-Sample-Assets/Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb";
 
 export fn init() void {
     sg.setup(.{
@@ -38,28 +40,23 @@ export fn init() void {
 
     state.scene.init(std.heap.c_allocator);
 
-    // parse gltf
-    const allocator = std.heap.c_allocator;
-    const parsed = std.json.parseFromSlice(
-        zigltf.Gltf,
-        allocator,
-        minimal_gltf,
-        .{
-            .ignore_unknown_fields = true,
-        },
-    ) catch |e| {
-        std.debug.print("{s}\n", .{@errorName(e)});
-        @panic("parseFromSlice");
-    };
+    gltf_fetcher.init();
+    gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
+}
 
-    // build
-    state.scene.load(parsed.value, &.{}) catch |e| {
+fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf)) void {
+    state.gltf = gltf;
+    std.debug.print("{s}\n", .{gltf.value});
+    state.scene.load(gltf.value, &.{}) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };
+    gltf_fetcher.status = "loaded";
 }
 
 export fn frame() void {
+    sokol.fetch.dowork();
+
     state.input.screen_width = sokol.app.widthf();
     state.input.screen_height = sokol.app.heightf();
     state.orbit.frame(state.input);
@@ -67,7 +64,7 @@ export fn frame() void {
 
     sokol.debugtext.canvas(sokol.app.widthf() * 0.5, sokol.app.heightf() * 0.5);
     sokol.debugtext.pos(0.5, 0.5);
-    sokol.debugtext.puts("minimal_gltf");
+    sokol.debugtext.puts(gltf_fetcher.status);
 
     sg.beginPass(.{
         .action = state.pass_action,

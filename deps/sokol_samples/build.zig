@@ -73,4 +73,8 @@ pub const samples = [_]Sample{
         .name = "minimal",
         .root_source_file = "minimal/main.zig",
     },
+    .{
+        .name = "CesiumMilkTruck",
+        .root_source_file = "CesiumMilkTruck/main.zig",
+    },
 };
