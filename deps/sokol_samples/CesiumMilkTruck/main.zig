@@ -40,7 +40,7 @@ export fn init() void {
 
     state.scene.init(std.heap.c_allocator);
 
-    gltf_fetcher.init();
+    gltf_fetcher.init(std.heap.c_allocator);
     gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
 }
 
@@ -51,7 +51,7 @@ fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf)) void {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };
-    gltf_fetcher.status = "loaded";
+    gltf_fetcher.state.status = "loaded";
 }
 
 export fn frame() void {
@@ -64,7 +64,7 @@ export fn frame() void {
 
     sokol.debugtext.canvas(sokol.app.widthf() * 0.5, sokol.app.heightf() * 0.5);
     sokol.debugtext.pos(0.5, 0.5);
-    sokol.debugtext.puts(gltf_fetcher.status);
+    sokol.debugtext.puts(gltf_fetcher.state.status);
 
     sg.beginPass(.{
         .action = state.pass_action,
