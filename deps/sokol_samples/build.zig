@@ -18,6 +18,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const test_models = b.dependency("gltf-test-models", .{});
+    const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
+
+    const out_wf = b.addNamedWriteFiles("glTF-Sample-Assets");
+    _ = out_wf.addCopyDirectory(wf.getDirectory(), "",.{});
+    b.default_step.dependOn(&out_wf.step);
+
     for (samples) |sample| {
         const exe = b.addExecutable(.{
             .target = target,

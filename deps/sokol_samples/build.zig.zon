@@ -20,6 +20,10 @@
             .url = "git+https://github.com/ousttrue/rowmath.git#62ef788d5643f0530bed28b19b390a5a5ca3f72f",
             .hash = "122085faa14bfe71cc4c324a16a4a156f6cbd05ec3c6ea9e668bb569d2ee1f24b729",
         },
+        // assets
+        .@"gltf-test-models" = .{
+            .path = "../../../gltf-test-models",
+        },
     },
     .paths = .{
         "",

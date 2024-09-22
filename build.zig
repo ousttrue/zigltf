@@ -15,20 +15,29 @@ pub fn build(b: *std.Build) void {
     });
 
     if (b.option(bool, "sokol", "build sokol samples") orelse false) {
-        const sokol_build = @import("sokol_samples");
-        const sokol_deps = b.dependency("sokol_samples", .{
+        const samples_build = @import("sokol_samples");
+        const samples_deps = b.dependency("sokol_samples", .{
             .target = target,
             .optimize = optimize,
         });
 
-        for (sokol_build.samples) |sample| {
-            const artifact = sokol_deps.artifact(sample.name);
+        const wf = samples_deps.namedWriteFiles("glTF-Sample-Assets");
+        const install_models = b.addInstallDirectory(.{
+            .source_dir = wf.getDirectory(),
+            .install_dir = .prefix,
+            .install_subdir = "web/glTF-Sample-Assets",
+        });
+
+        for (samples_build.samples) |sample| {
+            const artifact = samples_deps.artifact(sample.name);
 
             const install = b.addInstallArtifact(artifact, .{});
+            install.step.dependOn(&install_models.step);
             b.getInstallStep().dependOn(&install.step);
 
             const run = b.addRunArtifact(artifact);
             run.step.dependOn(&install.step);
+            run.setCwd(b.path("zig-out/web"));
 
             b.step(
                 b.fmt("run-{s}", .{sample.name}),
