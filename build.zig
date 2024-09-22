@@ -21,28 +21,39 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
 
-        const wf = samples_deps.namedWriteFiles("glTF-Sample-Assets");
-        const install_models = b.addInstallDirectory(.{
-            .source_dir = wf.getDirectory(),
+        const asset_wf = samples_deps.namedWriteFiles("glTF-Sample-Assets");
+        const asset_install = b.addInstallDirectory(.{
+            .source_dir = asset_wf.getDirectory(),
             .install_dir = .prefix,
             .install_subdir = "web/glTF-Sample-Assets",
         });
 
-        for (samples_build.samples) |sample| {
-            const artifact = samples_deps.artifact(sample.name);
+        if (target.result.isWasm()) {
+            const wasm_wf = samples_deps.namedWriteFiles("wasm");
+            const wasm_install = b.addInstallDirectory(.{
+                .source_dir = wasm_wf.getDirectory(),
+                .install_dir = .prefix,
+                .install_subdir = "",
+            });
+            b.getInstallStep().dependOn(&wasm_install.step);
+            b.getInstallStep().dependOn(&asset_install.step);
+        } else {
+            for (samples_build.samples) |sample| {
+                const artifact = samples_deps.artifact(sample.name);
 
-            const install = b.addInstallArtifact(artifact, .{});
-            install.step.dependOn(&install_models.step);
-            b.getInstallStep().dependOn(&install.step);
+                const install = b.addInstallArtifact(artifact, .{});
+                install.step.dependOn(&asset_install.step);
+                b.getInstallStep().dependOn(&install.step);
 
-            const run = b.addRunArtifact(artifact);
-            run.step.dependOn(&install.step);
-            run.setCwd(b.path("zig-out/web"));
+                const run = b.addRunArtifact(artifact);
+                run.step.dependOn(&install.step);
+                run.setCwd(b.path("zig-out/web"));
 
-            b.step(
-                b.fmt("run-{s}", .{sample.name}),
-                b.fmt("run sokol_samples {s}", .{sample.name}),
-            ).dependOn(&run.step);
+                b.step(
+                    b.fmt("run-{s}", .{sample.name}),
+                    b.fmt("run sokol_samples {s}", .{sample.name}),
+                ).dependOn(&run.step);
+            }
         }
     }
 
