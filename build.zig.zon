@@ -1,0 +1,16 @@
+.{
+    .name = "zigltf",
+    .version = "0.0.0",
+    .dependencies = .{
+        .zigltf = .{
+            .path = "deps/zigltf",
+        },
+        .sokol_samples = .{
+            .path = "deps/sokol_samples",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+}

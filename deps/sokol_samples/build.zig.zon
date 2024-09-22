@@ -1,0 +1,27 @@
+.{
+    .name = "sokol_samples",
+    .version = "0.0.0",
+    .dependencies = .{
+        .zigltf = .{
+            .path = "../zigltf",
+        },
+        // custom sokol(-fPIC for wasm)
+        .sokol = .{
+            .url = "git+https://github.com/ousttrue/sokol-zig.git#38014bc673fd3c82f44612f02573d5af00dfc66f",
+            .hash = "12205b36041f858db146628cd3b25fae4cda5f161a6a52d48fa22cde0c03b689ccb8",
+        },
+        // glsl => glsl.zig
+        .@"sokol-tools-bin" = .{
+            .url = "git+https://github.com/floooh/sokol-tools-bin.git#8cc8c257380c9a5e230a84aeebf09cd500903fbc",
+            .hash = "12200f5129c997728160ab584adcc939b9dbca6f802d7273f386dad777de85e80421",
+        },
+        // camera etc
+        .rowmath = .{
+            .url = "git+https://github.com/ousttrue/rowmath.git#62ef788d5643f0530bed28b19b390a5a5ca3f72f",
+            .hash = "122085faa14bfe71cc4c324a16a4a156f6cbd05ec3c6ea9e668bb569d2ee1f24b729",
+        },
+    },
+    .paths = .{
+        "",
+    },
+}
