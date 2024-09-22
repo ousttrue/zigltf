@@ -44,10 +44,10 @@ export fn init() void {
     gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
 }
 
-fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf)) void {
+fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf), bin:?[]const u8) void {
     state.gltf = gltf;
     std.debug.print("{s}\n", .{gltf.value});
-    state.scene.load(gltf.value, &.{}) catch |e| {
+    state.scene.load(gltf.value, bin) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };

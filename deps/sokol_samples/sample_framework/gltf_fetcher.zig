@@ -3,7 +3,7 @@ const sokol = @import("sokol");
 const rowmath = @import("rowmath");
 const zigltf = @import("zigltf");
 
-const GltfCallback = fn (gltf: std.json.Parsed(zigltf.Gltf)) void;
+const GltfCallback = fn (gltf: std.json.Parsed(zigltf.Gltf), bin: ?[]const u8) void;
 
 const Task = union(enum) {
     gltf: struct {
@@ -56,6 +56,18 @@ pub fn fetch_gltf(path: [:0]const u8, on_gltf: *const GltfCallback) !void {
     state.task_count += 1;
 }
 
+fn toSlice(ptr: [*]const u8, size: usize) []const u8 {
+    return ptr[0..size];
+}
+
+fn getGlb(gltf_or_glb: []const u8) zigltf.Glb {
+    if (zigltf.Glb.parse(gltf_or_glb)) |glb| {
+        return glb;
+    } else {
+        return .{ .json_bytes = gltf_or_glb };
+    }
+}
+
 export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
     if (response.*.fetched) {
         const user: *const Task = @ptrCast(@alignCast(response.*.user_data));
@@ -67,19 +79,26 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                     .{response.*.data.size},
                 ) catch @panic("bufPrintZ");
 
-                const p: [*]const u8 = @ptrCast(response.*.data.ptr);
+                const bytes = toSlice(
+                    @ptrCast(response.*.data.ptr),
+                    response.*.data.size,
+                );
+
+                const glb = getGlb(bytes);
+
                 if (std.json.parseFromSlice(
                     zigltf.Gltf,
                     state.allocator,
-                    p[0..response.*.data.size],
+                    glb.json_bytes,
                     .{
                         .ignore_unknown_fields = true,
                     },
                 )) |parsed| {
                     // defer parsed.deinit();
                     state.status = "parsed";
-                    gltf_task.callback(parsed);
+                    gltf_task.callback(parsed, glb.bin);
                 } else |e| {
+                    // std.debug.print("{s}\n", .{glb.json_bytes});
                     state.status = std.fmt.bufPrintZ(
                         &state.status_buffer,
                         "fail to parse: {s}",

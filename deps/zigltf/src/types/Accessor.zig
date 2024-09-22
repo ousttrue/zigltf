@@ -6,7 +6,7 @@ name: ?[]const u8 = null,
 componentType: u32,
 type: []const u8,
 count: u32,
-bufferView: ?u32,
+bufferView: ?u32 = null,
 byteOffset: u32 = 0,
 
 fn componentTypeToStr(componentType: u32) []const u8 {

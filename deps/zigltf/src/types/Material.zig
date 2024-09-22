@@ -2,7 +2,7 @@ const std = @import("std");
 const format_helper = @import("format_helper.zig");
 
 pub const PbrMetallicRoughness = struct {
-    baseColorFactor: ?struct { f32, f32, f32, f32 },
+    baseColorFactor: ?struct { f32, f32, f32, f32 } = .{ 0, 0, 0, 0 },
 
     pub fn format(
         self: @This(),

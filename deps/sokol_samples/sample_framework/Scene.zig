@@ -73,7 +73,7 @@ pub fn deinit(self: *@This()) void {
 pub fn load(
     self: *@This(),
     gltf: zigltf.Gltf,
-    bin: []const u8,
+    bin: ?[]const u8,
 ) !void {
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
@@ -85,7 +85,7 @@ pub fn load(
     var gltf_buffer = zigltf.GltfBuffer.init(
         self.allocator,
         gltf,
-        bin,
+        if (bin) |b| b else &.{},
     );
     defer gltf_buffer.deinit();
 
