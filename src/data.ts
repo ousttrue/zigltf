@@ -5,7 +5,7 @@ export type SampleType = {
 
 export const SAMPLES: SampleType[] = [
   {
-    name: "mimimal",
+    name: "minimal",
     url: "https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html",
   },
   {
