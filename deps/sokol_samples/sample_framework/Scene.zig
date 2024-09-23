@@ -10,39 +10,9 @@ const Mat4 = rowmath.Mat4;
 const Vec3 = rowmath.Vec3;
 const Quat = rowmath.Quat;
 
-pub const Vertex = struct {
-    position: [3]f32,
-    normal: [3]f32,
-};
-
-pub const Mesh = struct {
-    bind: sg.Bindings = undefined,
-    draw_count: u32 = 0,
-
-    pub fn init(
-        self: *@This(),
-        vertices: []Vertex,
-        indices: []u16,
-    ) void {
-        self.bind.vertex_buffers[0] = sg.makeBuffer(.{
-            .data = sg.asRange(vertices),
-            .label = "gltf-vertices",
-        });
-        self.bind.index_buffer = sg.makeBuffer(.{
-            .type = .INDEXBUFFER,
-            .data = sg.asRange(indices),
-            .label = "gltf-indices",
-        });
-        self.draw_count = @intCast(indices.len);
-    }
-
-    pub fn draw(self: *const @This()) void {
-        sg.applyBindings(self.bind);
-        sg.draw(0, self.draw_count, 1);
-    }
-};
-
+const Mesh = @import("Mesh.zig");
 pub const Scene = @This();
+
 allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
@@ -85,7 +55,7 @@ pub fn load(
 
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
-    var mesh_vertices = std.ArrayList(Vertex).init(self.allocator);
+    var mesh_vertices = std.ArrayList(Mesh.Vertex).init(self.allocator);
     defer mesh_vertices.deinit();
     var mesh_indices = std.ArrayList(u16).init(self.allocator);
     defer mesh_indices.deinit();
