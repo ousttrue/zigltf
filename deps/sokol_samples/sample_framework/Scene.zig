@@ -6,6 +6,9 @@ const shader = @import("gltf.glsl.zig");
 const zigltf = @import("zigltf");
 const rowmath = @import("rowmath");
 const Camera = rowmath.Camera;
+const Mat4 = rowmath.Mat4;
+const Vec3 = rowmath.Vec3;
+const Quat = rowmath.Quat;
 
 pub const Vertex = struct {
     position: [3]f32,
@@ -43,6 +46,7 @@ pub const Scene = @This();
 allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
+gltf: ?std.json.Parsed(zigltf.Gltf) = null,
 
 pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     self.allocator = allocator;
@@ -72,10 +76,13 @@ pub fn deinit(self: *@This()) void {
 
 pub fn load(
     self: *@This(),
-    gltf: zigltf.Gltf,
+    json: std.json.Parsed(zigltf.Gltf),
     bin: ?[]const u8,
 ) !void {
+    self.gltf = json;
+    const gltf = json.value;
     std.debug.print("{any}\n", .{gltf});
+
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
     var mesh_vertices = std.ArrayList(Vertex).init(self.allocator);
@@ -157,13 +164,73 @@ pub fn load(
 }
 
 pub fn draw(self: *@This(), camera: Camera) void {
-    const vs_params = shader.VsParams{
-        .mvp = camera.viewProjectionMatrix().m,
-    };
-
-    sg.applyPipeline(self.pip);
-    for (self.meshes) |mesh| {
-        sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
-        mesh.draw();
+    if (self.gltf) |json| {
+        sg.applyPipeline(self.pip);
+        for (json.value.scenes[0].nodes) |root_node_index| {
+            self.draw_node(
+                json.value,
+                camera.viewProjectionMatrix(),
+                root_node_index,
+                Mat4.identity,
+            );
+        }
     }
+}
+
+fn draw_node(
+    self: *@This(),
+    gltf: zigltf.Gltf,
+    vp: Mat4,
+    node_index: u32,
+    parent_matrix: Mat4,
+) void {
+    const node = gltf.nodes[node_index];
+    const local_matrix = if (node.matrix) |node_matrix|
+        Mat4{ .m = node_matrix }
+    else block: {
+        var t = Vec3.zero;
+        var r = Quat.identity;
+        var s = Vec3.one;
+        if (node.translation) |translation| {
+            t = .{
+                .x = translation[0],
+                .y = translation[1],
+                .z = translation[2],
+            };
+        }
+        if (node.rotation) |rotation| {
+            r = .{
+                .x = rotation[0],
+                .y = rotation[1],
+                .z = rotation[2],
+                .w = rotation[3],
+            };
+        }
+        if (node.scale) |scale| {
+            s = .{
+                .x = scale[0],
+                .y = scale[1],
+                .z = scale[2],
+            };
+        }
+        break :block Mat4.trs(.{ .t = t, .r = r, .s = s });
+    };
+    const model_matrix = local_matrix.mul(parent_matrix);
+
+    if (node.mesh) |mesh_index| {
+        self.draw_mesh(mesh_index, vp, model_matrix);
+    }
+
+    for (node.children) |child_node_index| {
+        self.draw_node(gltf, vp, child_node_index, model_matrix);
+    }
+}
+
+fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
+    const vs_params = shader.VsParams{
+        .view_projection = vp.m,
+        .model = model.m,
+    };
+    sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
+    self.meshes[mesh_index].draw();
 }

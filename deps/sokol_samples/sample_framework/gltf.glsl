@@ -1,6 +1,7 @@
 @vs vs
 uniform vs_params {
-    mat4 mvp;
+    mat4 view_projection;
+    mat4 model;
 };
 
 in vec4 position;
@@ -9,7 +10,7 @@ in vec3 normal;
 out vec4 color;
 
 void main() {
-    gl_Position = mvp * position;
+    gl_Position = view_projection * model  * position;
     color = vec4(normal, 1);
 }
 @end

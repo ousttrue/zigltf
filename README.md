@@ -20,7 +20,7 @@ wasm build.
 
 - [x] [minimal](https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html)
 - [x] [glb](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMilkTruck/glTF-Binary)
-  - [ ] node
+  - [x] node
   - [ ] texture
   - [ ] animation
 - [ ] draco

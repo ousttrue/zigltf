@@ -20,6 +20,13 @@ pub fn format(
     _ = fmt;
     _ = options;
     try format_helper.string_value(writer, self.name, .{});
+    if (self.matrix) |m| {
+        try writer.print("{any}", .{m});
+    } else {
+        if (self.translation) |t| try writer.print("t:{any}", .{t});
+        if (self.rotation) |r| try writer.print("r:{any}", .{r});
+        if (self.scale) |s| try writer.print("s:{any}", .{s});
+    }
     try writer.print("{{\n", .{});
     try writer.print("  children: {any}\n", .{self.children});
     try format_helper.number_field(writer, 2, "mesh", self.mesh, .{});

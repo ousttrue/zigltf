@@ -128,7 +128,7 @@ export fn init() void {
     };
 
     // build
-    state.scene.load(parsed.value, &.{}) catch |e| {
+    state.scene.load(parsed, &.{}) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };
