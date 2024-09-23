@@ -75,6 +75,7 @@ pub fn load(
     gltf: zigltf.Gltf,
     bin: ?[]const u8,
 ) !void {
+    std.debug.print("{any}\n", .{gltf});
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
     var mesh_vertices = std.ArrayList(Vertex).init(self.allocator);

@@ -7,16 +7,19 @@ pub const Material = @import("Material.zig");
 pub const Mesh = @import("Mesh.zig");
 pub const Node = @import("Node.zig");
 pub const Skin = @import("Skin.zig");
+pub const Scene = @import("Scene.zig");
 pub const Gltf = @This();
 
 asset: Asset,
-buffers:[]Buffer = &.{},
+buffers: []Buffer = &.{},
 bufferViews: []BufferView = &.{},
 accessors: []Accessor = &.{},
 materials: []Material = &.{},
 meshes: []Mesh = &.{},
 nodes: []Node = &.{},
 skins: []Skin = &.{},
+scenes: []Scene = &.{},
+scene: u32 = 0,
 
 fn print_list(writer: anytype, name: []const u8, list: anytype) !void {
     if (list.len > 0) {
@@ -47,6 +50,7 @@ pub fn format(
     try print_list(writer, "meshes", self.meshes);
     try print_list(writer, "nodes", self.nodes);
     try print_list(writer, "skins", self.skins);
+    try print_list(writer, "scenes", self.scenes);
 
     try writer.print("}}\n", .{});
 }
