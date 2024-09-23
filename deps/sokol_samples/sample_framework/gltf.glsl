@@ -23,6 +23,8 @@ void main() {
 @fs fs
 uniform fs_params {
     vec3 lightPos;  
+    vec3 lightColor;
+    vec3 ambient;
 };
 uniform submesh_params {
     vec4 material_rgba;
@@ -40,14 +42,15 @@ out vec4 frag_color;
 void main() {
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);  
-    float diff = max(dot(norm, lightDir), 0.0);
+    float diffuse = max(dot(norm, lightDir), 0.0);
+
     vec4 texel = texture(colorTexture, TexCoord);
-    // vec3 diffuse = diff * lightColor;
     frag_color = texel * vec4(
-        material_rgba.r * diff, 
-        material_rgba.g * diff, 
-        material_rgba.b * diff, 
-        material_rgba.a);
+        material_rgba.r * diffuse * lightColor.r + ambient.r, 
+        material_rgba.g * diffuse * lightColor.r + ambient.g, 
+        material_rgba.b * diffuse * lightColor.r + ambient.b,
+        material_rgba.a
+        );
 }
 @end
 

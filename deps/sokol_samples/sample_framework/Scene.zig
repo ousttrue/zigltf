@@ -13,6 +13,10 @@ const Quat = rowmath.Quat;
 const Mesh = @import("Mesh.zig");
 pub const Scene = @This();
 
+const light_pos = [3]f32{ -10, -10, -10 };
+const light_color = [3]f32{ 1,1,1 };
+const ambient = [3]f32{ 0.2, 0.2, 0.2 };
+
 allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
@@ -261,7 +265,9 @@ fn draw_mesh(self: *@This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
     sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
 
     const fs_params = shader.FsParams{
-        .lightPos = .{ 10, 10, 10 },
+        .lightPos = light_pos,
+        .lightColor = light_color,
+        .ambient = ambient,
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
