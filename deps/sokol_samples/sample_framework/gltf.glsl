@@ -1,26 +1,37 @@
 @vs vs
 uniform vs_params {
-    mat4 view_projection;
+    mat4 projection_view;
     mat4 model;
 };
 
-in vec4 position;
-in vec3 normal;
+in vec3 aPos;
+in vec3 aNormal;
 
-out vec4 color;
+out vec3 FragPos;  
+out vec3 Normal;
 
 void main() {
-    gl_Position = view_projection * model  * position;
-    color = vec4(normal, 1);
+    gl_Position = projection_view * model  * vec4(aPos, 1.0);
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = aNormal;
 }
 @end
 
 @fs fs
-in vec4 color;
+uniform fs_params {
+    vec3 lightPos;  
+};
+
+in vec3 FragPos;
+in vec3 Normal;
 out vec4 frag_color;
 
 void main() {
-    frag_color = color;
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);  
+    float diff = max(dot(norm, lightDir), 0.0);
+    // vec3 diffuse = diff * lightColor;
+    frag_color = vec4(diff, diff, diff, 1.0);
 }
 @end
 

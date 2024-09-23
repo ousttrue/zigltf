@@ -65,8 +65,8 @@ pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     };
     // test to provide buffer stride, but no attr offsets
     // pip_desc.layout.buffers[0].stride = 28;
-    pip_desc.layout.attrs[shader.ATTR_vs_position].format = .FLOAT3;
-    pip_desc.layout.attrs[shader.ATTR_vs_normal].format = .FLOAT3;
+    pip_desc.layout.attrs[shader.ATTR_vs_aPos].format = .FLOAT3;
+    pip_desc.layout.attrs[shader.ATTR_vs_aNormal].format = .FLOAT3;
     self.pip = sg.makePipeline(pip_desc);
 }
 
@@ -228,9 +228,20 @@ fn draw_node(
 
 fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
     const vs_params = shader.VsParams{
-        .view_projection = vp.m,
+        // rowmath では vec * mat の乗算順なので view_projection
+        // glsl では mat * vec の乗算順なので projection_view
+        // memory layout は同じ
+        //
+        //   vec * mat と記述する場合は transpose が必要
+        .projection_view = vp.m,
         .model = model.m,
     };
     sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
+
+    const fs_params = shader.FsParams{
+        .lightPos = .{10, 10, 10},
+    };
+    sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
+
     self.meshes[mesh_index].draw();
 }
