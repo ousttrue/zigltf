@@ -18,6 +18,7 @@ const emcc_extra_args = [_][]const u8{
     "-sTOTAL_MEMORY=512MB",
     "-sALLOW_MEMORY_GROWTH=0",
     "-sUSE_OFFSET_CONVERTER=1",
+    "-sSTB_IMAGE=1",
 } ++ (if (builtin.mode == .Debug) debug_flags else release_flags);
 
 pub fn build(b: *std.Build) void {
