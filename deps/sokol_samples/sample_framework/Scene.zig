@@ -55,6 +55,9 @@ pub fn load(
 
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
+    var submeshes = std.ArrayList(Mesh.Submesh).init(self.allocator);
+    defer submeshes.deinit();
+
     var mesh_vertices = std.ArrayList(Mesh.Vertex).init(self.allocator);
     defer mesh_vertices.deinit();
     var mesh_indices = std.ArrayList(u16).init(self.allocator);
@@ -83,7 +86,6 @@ pub fn load(
         index_count = 0;
         for (gltf_mesh.primitives) |primitive| {
             const pos_accessor = gltf.accessors[primitive.attributes.POSITION];
-            const index_accessor = gltf.accessors[primitive.indices.?];
 
             {
                 // position
@@ -118,17 +120,25 @@ pub fn load(
                         @intCast(vertex_count),
                     );
                 }
+
+                const index_accessor = gltf.accessors[indices_accessor_index];
+                try submeshes.append(.{
+                    .material_index = primitive.material,
+                    .draw_count = index_accessor.count,
+                });
+                index_count += index_accessor.count;
             } else {
                 unreachable;
             }
 
             vertex_count += pos_accessor.count;
-            index_count += index_accessor.count;
         }
 
-        var mesh = Mesh{};
-        mesh.init(mesh_vertices.items, mesh_indices.items);
-        try meshes.append(mesh);
+        try meshes.append(Mesh.init(
+            mesh_vertices.items,
+            mesh_indices.items,
+            try submeshes.toOwnedSlice(),
+        ));
     }
     self.meshes = try meshes.toOwnedSlice();
 }
@@ -209,7 +219,7 @@ fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void 
     sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
 
     const fs_params = shader.FsParams{
-        .lightPos = .{10, 10, 10},
+        .lightPos = .{ 10, 10, 10 },
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
