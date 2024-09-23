@@ -22,10 +22,21 @@ pub fn init(
     };
 }
 
-pub fn deinit(self:*@This())void
-{
+pub fn deinit(self: *@This()) void {
     // TODO:
     self.uriMap.deinit();
+}
+
+pub fn getImageBytes(self: *@This(), image_index: u32) ![]const u8 {
+    const image = self.gltf.images[image_index];
+    if (image.bufferView) |bufferView_index| {
+        return try self.getBufferViewBytes(bufferView_index);
+    } else if (image.uri) |uri| {
+        _ = uri;
+        @panic("image.uri not implemented");
+    } else {
+        unreachable;
+    }
 }
 
 pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T {

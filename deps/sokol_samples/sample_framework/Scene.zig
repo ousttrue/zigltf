@@ -17,6 +17,7 @@ allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
 gltf: ?std.json.Parsed(zigltf.Gltf) = null,
+white_texture: Mesh.Texture = undefined,
 
 pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     self.allocator = allocator;
@@ -37,7 +38,10 @@ pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     // pip_desc.layout.buffers[0].stride = 28;
     pip_desc.layout.attrs[shader.ATTR_vs_aPos].format = .FLOAT3;
     pip_desc.layout.attrs[shader.ATTR_vs_aNormal].format = .FLOAT3;
+    pip_desc.layout.attrs[shader.ATTR_vs_aTexCoord].format = .FLOAT2;
     self.pip = sg.makePipeline(pip_desc);
+
+    self.white_texture = Mesh.Texture.init(Mesh.Image.white);
 }
 
 pub fn deinit(self: *@This()) void {
@@ -106,6 +110,16 @@ pub fn load(
                     mesh_vertices.items[vertex_count + i].normal = normal;
                 }
             }
+            if (primitive.attributes.TEXCOORD_0) |tex0_accessor_index| {
+                // uv
+                const tex0s = try gltf_buffer.getAccessorBytes(
+                    [2]f32,
+                    tex0_accessor_index,
+                );
+                for (tex0s, 0..) |tex0, i| {
+                    mesh_vertices.items[vertex_count + i].uv = tex0;
+                }
+            }
 
             if (primitive.indices) |indices_accessor_index| {
                 // indies
@@ -129,11 +143,27 @@ pub fn load(
                             color = base_color;
                         }
                     }
+
+                    var color_texture = self.white_texture;
+                    if (material.pbrMetallicRoughness) |pbr| {
+                        if (pbr.baseColorTexture) |base| {
+                            const texture = gltf.textures[base.index];
+                            if (texture.source) |source| {
+                                const image_bytes = try gltf_buffer.getImageBytes(source);
+                                if (Mesh.Image.init(image_bytes)) |image| {
+                                    defer image.deinit();
+                                    color_texture = Mesh.Texture.init(image);
+                                }
+                            }
+                        }
+                    }
+
                     try submeshes.append(.{
                         .draw_count = index_accessor.count,
                         .submesh_params = .{
                             .material_rgba = color,
                         },
+                        .color_texture = color_texture,
                     });
                 } else {
                     @panic("no material");
@@ -218,7 +248,7 @@ fn draw_node(
     }
 }
 
-fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
+fn draw_mesh(self: *@This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
     const vs_params = shader.VsParams{
         // rowmath では vec * mat の乗算順なので view_projection
         // glsl では mat * vec の乗算順なので projection_view
@@ -235,17 +265,21 @@ fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void 
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
-    const mesh = &self.meshes[mesh_index];
-    sg.applyBindings(mesh.bind);
+    var mesh = &self.meshes[mesh_index];
 
     var offset: u32 = 0;
-    for (mesh.submeshes) |submesh| {
+    for (mesh.submeshes) |*submesh| {
         sg.applyUniforms(
             .FS,
             shader.SLOT_submesh_params,
             sg.asRange(&submesh.submesh_params),
         );
+
+        mesh.bind.fs = submesh.color_texture.fs;
+        sg.applyBindings(mesh.bind);
+
         sg.draw(offset, submesh.draw_count, 1);
+
         offset += submesh.draw_count;
     }
 }

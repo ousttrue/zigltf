@@ -29,6 +29,10 @@
             .url = "git+https://github.com/ousttrue/gltf-test-models.git#55328b2d063141993373ab8c770c72d7cfda260f",
             .hash = "1220aa78e130eb4c584dc21b408dcd26e8cfd30043e0f673ba6d229a0bfff592c54e",
         },
+        .stb = .{
+            .url = "git+https://github.com/nothings/stb.git#f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31",
+            .hash = "1220c4fe5a4c4ebec402f5cdef08bc264b56fb07f259107d2b01ba8d416d88624b50",
+        },
     },
     .paths = .{
         "",

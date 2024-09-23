@@ -5,6 +5,11 @@ pub const Mesh = @This();
 const Attributes = struct {
     POSITION: u32,
     NORMAL: ?u32 = null,
+    TANGENT: ?u32 = null,
+    TEXCOORD_0: ?u32 = null,
+    COLOR_0: ?u32 = null,
+    JOINTS_0: ?u32 = null,
+    WEIGHTS_0: ?u32 = null,
 
     pub fn format(
         self: @This(),
@@ -17,9 +22,12 @@ const Attributes = struct {
         // if (self.POSITION) |POSITION| {
         try writer.print("[POS=>#{}]", .{self.POSITION});
         // }
-        if (self.NORMAL) |NORMAL| {
-            try writer.print("[NOM=>#{}]", .{NORMAL});
-        }
+        if (self.NORMAL) |NORMAL| try writer.print("[NOM=>#{}]", .{NORMAL});
+        if (self.TANGENT) |TANGENT| try writer.print("[NOM=>#{}]", .{TANGENT});
+        if (self.TEXCOORD_0) |TEXCOORD_0| try writer.print("[NOM=>#{}]", .{TEXCOORD_0});
+        if (self.COLOR_0) |COLOR_0| try writer.print("[NOM=>#{}]", .{COLOR_0});
+        if (self.JOINTS_0) |JOINTS_0| try writer.print("[NOM=>#{}]", .{JOINTS_0});
+        if (self.WEIGHTS_0) |WEIGHTS_0| try writer.print("[NOM=>#{}]", .{WEIGHTS_0});
     }
 };
 

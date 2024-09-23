@@ -62,6 +62,13 @@ pub fn build(b: *std.Build) void {
     sample_framework.root_module.addImport("sokol", sokol_dep.module("sokol"));
     sample_framework.root_module.addImport("zigltf", zigltf_dep.module("zigltf"));
     sample_framework.root_module.addImport("rowmath", rowmath_dep.module("rowmath"));
+    if (!target.result.isWasm()) {
+        const stb_dep = b.dependency("stb", .{});
+        sample_framework.addIncludePath(stb_dep.path(""));
+        sample_framework.addCSourceFile(.{
+            .file = b.path("sample_framework/stb/stb.c"),
+        });
+    }
 
     // create a build step which invokes the Emscripten linker
     var emsdk_dep_: ?*std.Build.Dependency = null;
