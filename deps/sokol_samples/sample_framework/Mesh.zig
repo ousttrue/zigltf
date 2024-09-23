@@ -1,5 +1,6 @@
 const sokol = @import("sokol");
 const sg = sokol.gfx;
+const shader = @import("gltf.glsl.zig");
 
 pub const Vertex = struct {
     position: [3]f32,
@@ -7,7 +8,7 @@ pub const Vertex = struct {
 };
 
 pub const Submesh = struct {
-    material_index: ?u32,
+    submesh_params: shader.SubmeshParams,
     draw_count: u32,
 };
 
@@ -43,14 +44,4 @@ pub fn deinit(self: @This()) void {
     self.vertices.deinit();
     self.indices.deinit();
     self.submeshes.deinit();
-}
-
-pub fn draw(self: *const @This()) void {
-    sg.applyBindings(self.bind);
-
-    var offset: u32 = 0;
-    for (self.submeshes) |submesh| {
-        sg.draw(offset, submesh.draw_count, 1);
-        offset += submesh.draw_count;
-    }
 }

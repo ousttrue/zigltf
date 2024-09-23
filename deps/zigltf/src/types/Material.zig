@@ -2,7 +2,11 @@ const std = @import("std");
 const format_helper = @import("format_helper.zig");
 
 pub const PbrMetallicRoughness = struct {
-    baseColorFactor: ?struct { f32, f32, f32, f32 } = .{ 0, 0, 0, 0 },
+    baseColorFactor: ?struct { f32, f32, f32, f32 } = null,
+    baseColorTexture: ?struct {
+        index: u32,
+        texCoord: ?u32,
+    } = null,
 
     pub fn format(
         self: @This(),
@@ -18,6 +22,13 @@ pub const PbrMetallicRoughness = struct {
             4,
             "baseColorFactor",
             self.baseColorFactor,
+            .{},
+        );
+        try format_helper.textureinfo_field(
+            writer,
+            4,
+            "baseColorTexture",
+            self.baseColorTexture,
             .{},
         );
         try writer.print("  }}", .{});

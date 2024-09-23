@@ -51,7 +51,6 @@ pub fn load(
 ) !void {
     self.gltf = json;
     const gltf = json.value;
-    std.debug.print("{any}\n", .{gltf});
 
     var meshes = std.ArrayList(Mesh).init(self.allocator);
     defer meshes.deinit();
@@ -122,10 +121,23 @@ pub fn load(
                 }
 
                 const index_accessor = gltf.accessors[indices_accessor_index];
-                try submeshes.append(.{
-                    .material_index = primitive.material,
-                    .draw_count = index_accessor.count,
-                });
+                if (primitive.material) |material_index| {
+                    const material = gltf.materials[material_index];
+                    var color: [4]f32 = .{ 1, 1, 1, 1 };
+                    if (material.pbrMetallicRoughness) |pbr| {
+                        if (pbr.baseColorFactor) |base_color| {
+                            color = base_color;
+                        }
+                    }
+                    try submeshes.append(.{
+                        .draw_count = index_accessor.count,
+                        .submesh_params = .{
+                            .material_rgba = color,
+                        },
+                    });
+                } else {
+                    @panic("no material");
+                }
                 index_count += index_accessor.count;
             } else {
                 unreachable;
@@ -223,5 +235,17 @@ fn draw_mesh(self: *const @This(), mesh_index: u32, vp: Mat4, model: Mat4) void 
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
-    self.meshes[mesh_index].draw();
+    const mesh = &self.meshes[mesh_index];
+    sg.applyBindings(mesh.bind);
+
+    var offset: u32 = 0;
+    for (mesh.submeshes) |submesh| {
+        sg.applyUniforms(
+            .FS,
+            shader.SLOT_submesh_params,
+            sg.asRange(&submesh.submesh_params),
+        );
+        sg.draw(offset, submesh.draw_count, 1);
+        offset += submesh.draw_count;
+    }
 }

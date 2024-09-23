@@ -82,3 +82,30 @@ pub fn string_value(
         try writer.print("null", .{});
     }
 }
+
+pub fn textureinfo_field(
+    writer: anytype,
+    comptime indent: usize,
+    key: []const u8,
+    value: anytype,
+    opts: Options,
+) !void {
+    if (opts.show_null or value != null) {
+        try writer.print("{s}", .{" " ** indent});
+        try writer.print("{s}: ", .{key});
+        try textureinfo_value(writer, value, .{ .show_null = true });
+        try writer.print("\n", .{});
+    }
+}
+
+pub fn textureinfo_value(
+    writer: anytype,
+    value: anytype,
+    opts: Options,
+) !void {
+    if (value) |x| {
+        try writer.print("#{}", .{x.index});
+    } else if (opts.show_null) {
+        try writer.print("null", .{});
+    }
+}
