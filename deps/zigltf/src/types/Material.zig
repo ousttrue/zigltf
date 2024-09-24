@@ -1,5 +1,6 @@
 const std = @import("std");
 const format_helper = @import("format_helper.zig");
+pub const Material = @This();
 
 pub const PbrMetallicRoughness = struct {
     baseColorFactor: ?struct { f32, f32, f32, f32 } = null,
@@ -35,8 +36,11 @@ pub const PbrMetallicRoughness = struct {
     }
 };
 
-name: ?[]const u8 = null,
+pub const default = Material{
+    .name = "gltf_default",
+};
 
+name: ?[]const u8 = null,
 pbrMetallicRoughness: ?PbrMetallicRoughness = null,
 
 pub fn format(

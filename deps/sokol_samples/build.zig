@@ -146,8 +146,6 @@ const Sample = struct {
     root_source_file: []const u8,
 };
 
-// .sokol_shader = "minimal/gltf.glsl",
-
 pub const samples = [_]Sample{
     .{
         .name = "minimal",
@@ -156,5 +154,9 @@ pub const samples = [_]Sample{
     .{
         .name = "CesiumMilkTruck",
         .root_source_file = "CesiumMilkTruck/main.zig",
+    },
+    .{
+        .name = "draco_bunny",
+        .root_source_file = "draco_bunny//main.zig",
     },
 };

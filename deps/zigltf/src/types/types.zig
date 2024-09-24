@@ -1,1 +1,12 @@
 pub usingnamespace @import("Gltf.zig");
+pub usingnamespace @import("Asset.zig");
+pub usingnamespace @import("Buffer.zig");
+pub usingnamespace @import("BufferView.zig");
+pub usingnamespace @import("Accessor.zig");
+pub usingnamespace @import("Image.zig");
+pub usingnamespace @import("Texture.zig");
+pub usingnamespace @import("Material.zig");
+pub usingnamespace @import("Mesh.zig");
+pub usingnamespace @import("Node.zig");
+pub usingnamespace @import("Skin.zig");
+pub usingnamespace @import("Scene.zig");

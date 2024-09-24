@@ -14,7 +14,7 @@ const Mesh = @import("Mesh.zig");
 pub const Scene = @This();
 
 const light_pos = [3]f32{ -10, -10, -10 };
-const light_color = [3]f32{ 1,1,1 };
+const light_color = [3]f32{ 1, 1, 1 };
 const ambient = [3]f32{ 0.2, 0.2, 0.2 };
 
 allocator: std.mem.Allocator = undefined,
@@ -139,39 +139,39 @@ pub fn load(
                 }
 
                 const index_accessor = gltf.accessors[indices_accessor_index];
-                if (primitive.material) |material_index| {
-                    const material = gltf.materials[material_index];
-                    var color: [4]f32 = .{ 1, 1, 1, 1 };
-                    if (material.pbrMetallicRoughness) |pbr| {
-                        if (pbr.baseColorFactor) |base_color| {
-                            color = base_color;
-                        }
-                    }
+                const material = if (primitive.material) |material_index|
+                    gltf.materials[material_index]
+                else
+                    zigltf.Material.default;
 
-                    var color_texture = self.white_texture;
-                    if (material.pbrMetallicRoughness) |pbr| {
-                        if (pbr.baseColorTexture) |base| {
-                            const texture = gltf.textures[base.index];
-                            if (texture.source) |source| {
-                                const image_bytes = try gltf_buffer.getImageBytes(source);
-                                if (Mesh.Image.init(image_bytes)) |image| {
-                                    defer image.deinit();
-                                    color_texture = Mesh.Texture.init(image);
-                                }
+                var color: [4]f32 = .{ 1, 1, 1, 1 };
+                if (material.pbrMetallicRoughness) |pbr| {
+                    if (pbr.baseColorFactor) |base_color| {
+                        color = base_color;
+                    }
+                }
+
+                var color_texture = self.white_texture;
+                if (material.pbrMetallicRoughness) |pbr| {
+                    if (pbr.baseColorTexture) |base| {
+                        const texture = gltf.textures[base.index];
+                        if (texture.source) |source| {
+                            const image_bytes = try gltf_buffer.getImageBytes(source);
+                            if (Mesh.Image.init(image_bytes)) |image| {
+                                defer image.deinit();
+                                color_texture = Mesh.Texture.init(image);
                             }
                         }
                     }
-
-                    try submeshes.append(.{
-                        .draw_count = index_accessor.count,
-                        .submesh_params = .{
-                            .material_rgba = color,
-                        },
-                        .color_texture = color_texture,
-                    });
-                } else {
-                    @panic("no material");
                 }
+
+                try submeshes.append(.{
+                    .draw_count = index_accessor.count,
+                    .submesh_params = .{
+                        .material_rgba = color,
+                    },
+                    .color_texture = color_texture,
+                });
                 index_count += index_accessor.count;
             } else {
                 unreachable;

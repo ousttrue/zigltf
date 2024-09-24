@@ -1,15 +1,15 @@
 const std = @import("std");
-pub const Asset = @import("Asset.zig");
-pub const Buffer = @import("Buffer.zig");
-pub const BufferView = @import("BufferView.zig");
-pub const Accessor = @import("Accessor.zig");
-pub const Image = @import("Image.zig");
-pub const Texture = @import("Texture.zig");
-pub const Material = @import("Material.zig");
-pub const Mesh = @import("Mesh.zig");
-pub const Node = @import("Node.zig");
-pub const Skin = @import("Skin.zig");
-pub const Scene = @import("Scene.zig");
+const Asset = @import("Asset.zig");
+const Buffer = @import("Buffer.zig");
+const BufferView = @import("BufferView.zig");
+const Accessor = @import("Accessor.zig");
+const Image = @import("Image.zig");
+const Texture = @import("Texture.zig");
+const Material = @import("Material.zig");
+const Mesh = @import("Mesh.zig");
+const Node = @import("Node.zig");
+const Skin = @import("Skin.zig");
+const Scene = @import("Scene.zig");
 pub const Gltf = @This();
 
 asset: Asset,

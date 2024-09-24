@@ -33,6 +33,14 @@
             .url = "git+https://github.com/nothings/stb.git#f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31",
             .hash = "1220c4fe5a4c4ebec402f5cdef08bc264b56fb07f259107d2b01ba8d416d88624b50",
         },
+        .vrm = .{
+            .url = "git+https://github.com/vrm-c/vrm-specification.git#f0da3145ddc13cfcc0877980815f0a249272ef79",
+            .hash = "1220ac6dab2e9b8f1c6e3bc18f531f5576fa32ce5af1459bd3fbf5ec3ecd20555ea1",
+        },
+        .draco = .{
+            .url = "git+https://github.com/google/draco.git#f4e08970937303d3016b8d841fe9e6141a9b66a0",
+            .hash = "12203bbaae27dde1346550405b678c29bbc6bae0db6e59fb5be1a20d5d51f454dc04",
+        },
     },
     .paths = .{
         "",
