@@ -41,6 +41,10 @@
             .url = "git+https://github.com/google/draco.git#f4e08970937303d3016b8d841fe9e6141a9b66a0",
             .hash = "12203bbaae27dde1346550405b678c29bbc6bae0db6e59fb5be1a20d5d51f454dc04",
         },
+        .univrm = .{
+            .url = "git+https://github.com/vrm-c/UniVRM.git#9e5d11be621c6349ad53b4f7fdc8cf9e52e7bbcd",
+            .hash = "122098e4ef97163fc7ba0ec63b6bec618a5fffead8e0e19e17a517cd05741f92a098",
+        },
     },
     .paths = .{
         "",

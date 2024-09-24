@@ -12,7 +12,7 @@ export const SAMPLES: SampleType[] = [
     name: "minimal",
     links: [
       {
-        name: 'A Minimal glTF File - glTF-Tutorials',
+        name: 'glTF-Tutorials',
         url: "https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html",
       },
     ],
@@ -39,8 +39,17 @@ export const SAMPLES: SampleType[] = [
     name: "draco",
     links: [
       {
-        name: 'draco - github',
+        name: 'github',
         url: "https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md",
+      },
+    ],
+  },
+  {
+    name: "vrm0",
+    links: [
+      {
+        name: "vrm-0.x",
+        url: 'https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/README.ja.md',
       },
     ],
   },

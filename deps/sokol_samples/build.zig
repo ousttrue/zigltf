@@ -156,7 +156,15 @@ pub const samples = [_]Sample{
         .root_source_file = "glb/main.zig",
     },
     .{
+        .name = "gltf",
+        .root_source_file = "gltf/main.zig",
+    },
+    .{
         .name = "draco",
         .root_source_file = "draco/main.zig",
+    },
+    .{
+        .name = "vrm0",
+        .root_source_file = "vrm0/main.zig",
     },
 };
