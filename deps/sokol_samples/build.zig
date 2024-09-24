@@ -152,11 +152,11 @@ pub const samples = [_]Sample{
         .root_source_file = "minimal/main.zig",
     },
     .{
-        .name = "CesiumMilkTruck",
-        .root_source_file = "CesiumMilkTruck/main.zig",
+        .name = "glb",
+        .root_source_file = "glb/main.zig",
     },
     .{
-        .name = "draco_bunny",
-        .root_source_file = "draco_bunny//main.zig",
+        .name = "draco",
+        .root_source_file = "draco/main.zig",
     },
 };

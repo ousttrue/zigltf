@@ -10,6 +10,15 @@ function Sample(props: SampleType) {
         <img width={150} height={78} src={`${BASE_URL}wasm/${props.name}.jpg`} />
       </figure>
     </a>
+
+    <ul>
+      {props.links.map((link, i) => (
+        <li key={i}>
+          <a href={link.url}>
+            {link.name}
+          </a>
+        </li>))}
+    </ul>
   </div>);
 }
 

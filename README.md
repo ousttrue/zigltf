@@ -23,6 +23,7 @@ wasm build.
   - [x] node
   - [x] texture
   - [ ] animation
+- [ ] glTF
 - [ ] draco
 - [ ] basisu
 - [ ] vrm-0.x
