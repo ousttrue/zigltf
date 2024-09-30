@@ -10,6 +10,7 @@ const Mesh = @import("Mesh.zig");
 const Node = @import("Node.zig");
 const Skin = @import("Skin.zig");
 const Scene = @import("Scene.zig");
+const Animation = @import("Animation.zig");
 pub const Gltf = @This();
 
 asset: Asset,
@@ -24,6 +25,7 @@ nodes: []Node = &.{},
 skins: []Skin = &.{},
 scenes: []Scene = &.{},
 scene: u32 = 0,
+animations: []Animation = &.{},
 
 fn print_list(writer: anytype, name: []const u8, list: anytype) !void {
     if (list.len > 0) {
@@ -57,6 +59,7 @@ pub fn format(
     try print_list(writer, "nodes", self.nodes);
     try print_list(writer, "skins", self.skins);
     try print_list(writer, "scenes", self.scenes);
+    try print_list(writer, "animations", self.animations);
 
     try writer.print("}}\n", .{});
 }

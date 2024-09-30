@@ -170,6 +170,10 @@ pub const samples = [_]Sample{
         .name = "sparse",
         .root_source_file = "tutorials/sparse/main.zig",
     },
+    .{
+        .name = "animation",
+        .root_source_file = "tutorials/animation/main.zig",
+    },
     //
     .{
         .name = "glb",

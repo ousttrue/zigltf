@@ -11,6 +11,7 @@ const Vec3 = rowmath.Vec3;
 const Quat = rowmath.Quat;
 
 const Mesh = @import("Mesh.zig");
+const Animation = @import("Animation.zig");
 pub const Scene = @This();
 
 const light_pos = [3]f32{ -10, -10, -10 };
@@ -22,6 +23,8 @@ meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
 gltf: ?std.json.Parsed(zigltf.Gltf) = null,
 white_texture: Mesh.Texture = undefined,
+animations: []Animation = &.{},
+currentAnimation: ?usize = null,
 
 pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     self.allocator = allocator;
@@ -229,6 +232,125 @@ pub fn load(
         ));
     }
     self.meshes = try meshes.toOwnedSlice();
+
+    if (gltf.animations.len > 0) {
+        var animations = std.ArrayList(Animation).init(self.allocator);
+
+        for (gltf.animations) |gltf_animation| {
+            var curves = std.ArrayList(Animation.Curve).init(self.allocator);
+            var duration: f32 = 0;
+
+            for (gltf_animation.channels) |channel| {
+                const sampler = gltf_animation.samplers[channel.sampler];
+                if (std.mem.eql(u8, channel.target.path, "translation")) {
+                    const curve = Animation.Vec3Curve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = channel.target.node,
+                        .target = .{ .translation = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "rotation")) {
+                    const curve = Animation.QuatCurve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Quat, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = channel.target.node,
+                        .target = .{ .rotation = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "scale")) {
+                    const curve = Animation.Vec3Curve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = channel.target.node,
+                        .target = .{ .scale = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "weights")) {
+                    const curve = Animation.FloatCurve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(f32, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = channel.target.node,
+                        .target = .{ .weights = curve },
+                    });
+                } else {
+                    unreachable;
+                }
+            }
+
+            try animations.append(.{
+                .duration = duration,
+                .curves = try curves.toOwnedSlice(),
+            });
+        }
+
+        self.animations = try animations.toOwnedSlice();
+        self.currentAnimation = 0;
+    }
+}
+
+pub fn update(self: @This(), time: f32) ?f32 {
+    const gltf = self.gltf orelse {
+        return null;
+    };
+
+    const current = self.currentAnimation orelse {
+        return null;
+    };
+
+    if (current >= self.animations.len) {
+        return null;
+    }
+
+    const animation = &self.animations[current];
+    const looptime = animation.loopTime(time);
+    for (animation.curves) |curve| {
+        switch (curve.target) {
+            .translation => |values| {
+                const t = values.sample(looptime);
+                gltf.value.nodes[curve.node_index].translation = .{
+                    t.x,
+                    t.y,
+                    t.z,
+                };
+            },
+            .rotation => |values| {
+                const r = values.sample(looptime);
+                gltf.value.nodes[curve.node_index].rotation = .{
+                    r.x,
+                    r.y,
+                    r.z,
+                    r.w,
+                };
+            },
+            .scale => |values| {
+                _ = values;
+                unreachable;
+            },
+            .weights => |values| {
+                _ = values;
+                unreachable;
+            },
+        }
+    }
+    return looptime;
 }
 
 pub fn draw(self: *@This(), camera: Camera) void {

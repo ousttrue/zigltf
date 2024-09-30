@@ -26,6 +26,15 @@ export const SAMPLES: SampleType[] = [
       },
     ],
   },
+  {
+    name: "animation",
+    links: [
+      {
+        name: 'glTF-Tutorials',
+        url: "https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_006_SimpleAnimation.html",
+      },
+    ],
+  },
   //
   {
     name: "glb",
