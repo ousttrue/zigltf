@@ -26,6 +26,9 @@ function Sample(props: SampleType) {
 function Home() {
   return (<>
     <div className="container">
+      <div className="item">
+        <a href="https://github.com/ousttrue/zigltf">github</a>
+      </div>
       {SAMPLES.map((props, i) => <Sample key={i} {...props} />)}
     </div>
   </>);
