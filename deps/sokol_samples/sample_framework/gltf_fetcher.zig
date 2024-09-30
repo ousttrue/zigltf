@@ -99,7 +99,6 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                     state.status = "parsed";
                     gltf_task.callback(parsed, glb.bin);
                 } else |e| {
-                    // std.debug.print("{s}\n", .{glb.json_bytes});
                     state.status = std.fmt.bufPrintZ(
                         &state.status_buffer,
                         "fail to parse: {s}",

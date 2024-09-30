@@ -164,8 +164,13 @@ const Sample = struct {
 pub const samples = [_]Sample{
     .{
         .name = "minimal",
-        .root_source_file = "minimal/main.zig",
+        .root_source_file = "tutorials/minimal/main.zig",
     },
+    .{
+        .name = "sparse",
+        .root_source_file = "tutorials/sparse/main.zig",
+    },
+    //
     .{
         .name = "glb",
         .root_source_file = "glb/main.zig",

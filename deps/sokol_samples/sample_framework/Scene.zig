@@ -57,6 +57,7 @@ pub fn load(
     json: std.json.Parsed(zigltf.Gltf),
     bin: ?[]const u8,
 ) !void {
+    std.debug.print("{s}\n", .{json.value});
     self.gltf = json;
     const gltf = json.value;
 

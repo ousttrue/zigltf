@@ -41,7 +41,55 @@ pub fn getImageBytes(self: *@This(), image_index: u32) ![]const u8 {
 
 pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T {
     const accessor = self.gltf.accessors[accessor_index];
-    if (@sizeOf(T) == accessor.stride()) {
+    if (@sizeOf(T) != accessor.stride()) {
+        return error.AccessorStrideNotEquals;
+    }
+
+    if (accessor.sparse) |sparse| {
+        if (accessor.bufferView) |bufferView_index| {
+            const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
+            const bytes = bufferViewBytes[accessor.byteOffset .. accessor.byteOffset + accessor.count * accessor.stride()];
+            const slice: []const T = @alignCast(std.mem.bytesAsSlice(T, bytes));
+            var buffer = try self.allocator.alloc(T, accessor.count);
+            std.mem.copyForwards(T, buffer, slice[0..accessor.count]);
+
+            switch (sparse.indices.componentType) {
+                5121 => {
+                    // u8
+                    std.debug.assert(sparse.indices.byteOffset == 0);
+                    const indices = try self.getBufferViewBytes(sparse.indices.bufferView);
+                    std.debug.assert(sparse.values.byteOffset == 0);
+                    const values = try self.getBufferViewBytes(sparse.values.bufferView);
+                    const values_t: []const T = @alignCast(std.mem.bytesAsSlice(T, values));
+                    for (indices, 0..) |index, i| {
+                        buffer[index] = values_t[i];
+                    }
+                },
+                5123 => {
+                    // u16
+                    std.debug.assert(sparse.indices.byteOffset == 0);
+                    const indices = try self.getBufferViewBytes(sparse.indices.bufferView);
+                    const indices_t: []const u16 = @alignCast(std.mem.bytesAsSlice(u16, indices));
+                    std.debug.assert(sparse.values.byteOffset == 0);
+                    const values = try self.getBufferViewBytes(sparse.values.bufferView);
+                    const values_t: []const T = @alignCast(std.mem.bytesAsSlice(T, values));
+                    for (indices_t, 0..) |index, i| {
+                        buffer[index] = values_t[i];
+                    }
+                },
+                5125 => {
+                    // u32
+                    @panic("u32 sparse indices");
+                },
+                else => {
+                    unreachable;
+                },
+            }
+            return buffer;
+        } else {
+            @panic("zero sparse not impl");
+        }
+    } else {
         if (accessor.bufferView) |bufferView_index| {
             const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
             const bytes = bufferViewBytes[accessor.byteOffset .. accessor.byteOffset + accessor.count * accessor.stride()];
@@ -49,8 +97,6 @@ pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T
         } else {
             unreachable;
         }
-    } else {
-        return error.AccessorStrideNotEquals;
     }
 }
 

@@ -2,11 +2,87 @@ const std = @import("std");
 const sokol = @import("sokol");
 const sg = sokol.gfx;
 
+const title = "minimal";
 const zigltf = @import("zigltf");
 const rowmath = @import("rowmath");
 const framework = @import("framework");
+// const utils = @import("utils");
 const Scene = framework.Scene;
-const gltf_fetcher = framework.gltf_fetcher;
+// const gltf_fetcher = @import("gltf_fetcher.zig");
+
+// https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html
+const minimal_gltf =
+    \\{
+    \\  "scene": 0,
+    \\  "scenes" : [
+    \\    {
+    \\      "nodes" : [ 0 ]
+    \\    }
+    \\  ],
+    \\  
+    \\  "nodes" : [
+    \\    {
+    \\      "mesh" : 0
+    \\    }
+    \\  ],
+    \\  
+    \\  "meshes" : [
+    \\    {
+    \\      "primitives" : [ {
+    \\        "attributes" : {
+    \\          "POSITION" : 1
+    \\        },
+    \\        "indices" : 0
+    \\      } ]
+    \\    }
+    \\  ],
+    \\
+    \\  "buffers" : [
+    \\    {
+    \\      "uri" : "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA=",
+    \\      "byteLength" : 44
+    \\    }
+    \\  ],
+    \\  "bufferViews" : [
+    \\    {
+    \\      "buffer" : 0,
+    \\      "byteOffset" : 0,
+    \\      "byteLength" : 6,
+    \\      "target" : 34963
+    \\    },
+    \\    {
+    \\      "buffer" : 0,
+    \\      "byteOffset" : 8,
+    \\      "byteLength" : 36,
+    \\      "target" : 34962
+    \\    }
+    \\  ],
+    \\  "accessors" : [
+    \\    {
+    \\      "bufferView" : 0,
+    \\      "byteOffset" : 0,
+    \\      "componentType" : 5123,
+    \\      "count" : 3,
+    \\      "type" : "SCALAR",
+    \\      "max" : [ 2 ],
+    \\      "min" : [ 0 ]
+    \\    },
+    \\    {
+    \\      "bufferView" : 1,
+    \\      "byteOffset" : 0,
+    \\      "componentType" : 5126,
+    \\      "count" : 3,
+    \\      "type" : "VEC3",
+    \\      "max" : [ 1.0, 1.0, 0.0 ],
+    \\      "min" : [ 0.0, 0.0, 0.0 ]
+    \\    }
+    \\  ],
+    \\  
+    \\  "asset" : {
+    \\    "version" : "2.0"
+    \\  }
+    \\}
+;
 
 const state = struct {
     var pass_action = sg.PassAction{};
@@ -15,8 +91,6 @@ const state = struct {
     var gltf: ?std.json.Parsed(zigltf.Gltf) = null;
     var scene = Scene{};
 };
-
-const load_file = "glTF-Sample-Assets/Models/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb";
 
 export fn init() void {
     sg.setup(.{
@@ -40,22 +114,28 @@ export fn init() void {
 
     state.scene.init(std.heap.c_allocator);
 
-    gltf_fetcher.init(std.heap.c_allocator);
-    gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
-}
+    // parse gltf
+    const allocator = std.heap.c_allocator;
+    const parsed = std.json.parseFromSlice(
+        zigltf.Gltf,
+        allocator,
+        minimal_gltf,
+        .{
+            .ignore_unknown_fields = true,
+        },
+    ) catch |e| {
+        std.debug.print("{s}\n", .{@errorName(e)});
+        @panic("parseFromSlice");
+    };
 
-fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf), bin:?[]const u8) void {
-    state.gltf = gltf;
-    state.scene.load(gltf, bin) catch |e| {
+    // build
+    state.scene.load(parsed, &.{}) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };
-    gltf_fetcher.state.status = "loaded";
 }
 
 export fn frame() void {
-    sokol.fetch.dowork();
-
     state.input.screen_width = sokol.app.widthf();
     state.input.screen_height = sokol.app.heightf();
     state.orbit.frame(state.input);
@@ -63,7 +143,7 @@ export fn frame() void {
 
     sokol.debugtext.canvas(sokol.app.widthf() * 0.5, sokol.app.heightf() * 0.5);
     sokol.debugtext.pos(0.5, 0.5);
-    sokol.debugtext.puts(gltf_fetcher.state.status);
+    sokol.debugtext.puts(title);
 
     sg.beginPass(.{
         .action = state.pass_action,
@@ -128,7 +208,7 @@ pub fn main() void {
         .event_cb = event,
         .width = 800,
         .height = 600,
-        .window_title = "rowmath: examples/sokol/camera_simple",
+        .window_title = title,
         .icon = .{ .sokol_default = true },
         .logger = .{ .func = sokol.log.func },
     });

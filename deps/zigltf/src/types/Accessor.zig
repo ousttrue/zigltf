@@ -1,5 +1,6 @@
 const std = @import("std");
 const format_helper = @import("format_helper.zig");
+pub const AccessorSparse = @import("AccessorSparse.zig");
 pub const Accessor = @This();
 
 name: ?[]const u8 = null,
@@ -8,6 +9,7 @@ type: []const u8,
 count: u32,
 bufferView: ?u32 = null,
 byteOffset: u32 = 0,
+sparse: ?AccessorSparse = null,
 
 fn componentTypeToStr(componentType: u32) []const u8 {
     return switch (componentType) {
@@ -57,10 +59,24 @@ pub fn format(
         typeToSuffix(self.type),
         self.count,
     });
-    if (self.bufferView) |bufferView| {
-        try writer.print(" => bufferView#{}", .{bufferView});
-        if (self.byteOffset > 0) {
-            try writer.print("+{}", .{self.byteOffset});
+    if (self.sparse) |sparse| {
+        if (self.bufferView) |bufferView| {
+            try writer.print(" => bufferView#{} + sparse[{}]", .{
+                bufferView,
+                sparse.count,
+            });
+        } else {
+            // the sparse accessor is initialized as an array of zeros of size (size of the accessor element) * (accessor.count) bytes.
+            try writer.print(" => + sparse[{}]", .{
+                sparse.count,
+            });
+        }
+    } else {
+        if (self.bufferView) |bufferView| {
+            try writer.print(" => bufferView#{}", .{bufferView});
+            if (self.byteOffset > 0) {
+                try writer.print("+{}", .{self.byteOffset});
+            }
         }
     }
 }

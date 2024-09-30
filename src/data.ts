@@ -18,6 +18,16 @@ export const SAMPLES: SampleType[] = [
     ],
   },
   {
+    name: "sparse",
+    links: [
+      {
+        name: 'glTF-Tutorials',
+        url: "https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_005_BuffersBufferViewsAccessors.html",
+      },
+    ],
+  },
+  //
+  {
     name: "glb",
     links: [
       {

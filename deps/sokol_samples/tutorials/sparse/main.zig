@@ -2,6 +2,7 @@ const std = @import("std");
 const sokol = @import("sokol");
 const sg = sokol.gfx;
 
+const title = "sparse";
 const zigltf = @import("zigltf");
 const rowmath = @import("rowmath");
 const framework = @import("framework");
@@ -12,70 +13,76 @@ const Scene = framework.Scene;
 // https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html
 const minimal_gltf =
     \\{
-    \\  "scene": 0,
-    \\  "scenes" : [
-    \\    {
-    \\      "nodes" : [ 0 ]
-    \\    }
-    \\  ],
+    \\  "scenes" : [ {
+    \\    "nodes" : [ 0 ]
+    \\  } ],
     \\  
-    \\  "nodes" : [
-    \\    {
-    \\      "mesh" : 0
-    \\    }
-    \\  ],
+    \\  "nodes" : [ {
+    \\    "mesh" : 0
+    \\  } ],
     \\  
-    \\  "meshes" : [
-    \\    {
-    \\      "primitives" : [ {
-    \\        "attributes" : {
-    \\          "POSITION" : 1
-    \\        },
-    \\        "indices" : 0
-    \\      } ]
-    \\    }
-    \\  ],
-    \\
-    \\  "buffers" : [
-    \\    {
-    \\      "uri" : "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAACAPwAAAAA=",
-    \\      "byteLength" : 44
-    \\    }
-    \\  ],
-    \\  "bufferViews" : [
-    \\    {
-    \\      "buffer" : 0,
-    \\      "byteOffset" : 0,
-    \\      "byteLength" : 6,
-    \\      "target" : 34963
-    \\    },
-    \\    {
-    \\      "buffer" : 0,
-    \\      "byteOffset" : 8,
-    \\      "byteLength" : 36,
-    \\      "target" : 34962
-    \\    }
-    \\  ],
-    \\  "accessors" : [
-    \\    {
-    \\      "bufferView" : 0,
-    \\      "byteOffset" : 0,
-    \\      "componentType" : 5123,
+    \\  "meshes" : [ {
+    \\    "primitives" : [ {
+    \\      "attributes" : {
+    \\        "POSITION" : 1
+    \\      },
+    \\      "indices" : 0
+    \\    } ]
+    \\  } ],
+    \\  
+    \\  "buffers" : [ {
+    \\    "uri" : "data:application/gltf-buffer;base64,AAAIAAcAAAABAAgAAQAJAAgAAQACAAkAAgAKAAkAAgADAAoAAwALAAoAAwAEAAsABAAMAAsABAAFAAwABQANAAwABQAGAA0AAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAQAAAAAAAAAAAAABAQAAAAAAAAAAAAACAQAAAAAAAAAAAAACgQAAAAAAAAAAAAADAQAAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAQAAAgD8AAAAAAABAQAAAgD8AAAAAAACAQAAAgD8AAAAAAACgQAAAgD8AAAAAAADAQAAAgD8AAAAACAAKAAwAAAAAAIA/AAAAQAAAAAAAAEBAAABAQAAAAAAAAKBAAACAQAAAAAA=",
+    \\    "byteLength" : 284
+    \\  } ],
+    \\  
+    \\  "bufferViews" : [ {
+    \\    "buffer" : 0,
+    \\    "byteOffset" : 0,
+    \\    "byteLength" : 72,
+    \\    "target" : 34963
+    \\  }, {
+    \\    "buffer" : 0,
+    \\    "byteOffset" : 72,
+    \\    "byteLength" : 168
+    \\  }, {
+    \\    "buffer" : 0,
+    \\    "byteOffset" : 240,
+    \\    "byteLength" : 6
+    \\  }, {
+    \\    "buffer" : 0,
+    \\    "byteOffset" : 248,
+    \\    "byteLength" : 36
+    \\  } ],
+    \\  
+    \\  "accessors" : [ {
+    \\    "bufferView" : 0,
+    \\    "byteOffset" : 0,
+    \\    "componentType" : 5123,
+    \\    "count" : 36,
+    \\    "type" : "SCALAR",
+    \\    "max" : [ 13 ],
+    \\    "min" : [ 0 ]
+    \\  }, {
+    \\    "bufferView" : 1,
+    \\    "byteOffset" : 0,
+    \\    "componentType" : 5126,
+    \\    "count" : 14,
+    \\    "type" : "VEC3",
+    \\    "max" : [ 6.0, 4.0, 0.0 ],
+    \\    "min" : [ 0.0, 0.0, 0.0 ],
+    \\    "sparse" : {
     \\      "count" : 3,
-    \\      "type" : "SCALAR",
-    \\      "max" : [ 2 ],
-    \\      "min" : [ 0 ]
-    \\    },
-    \\    {
-    \\      "bufferView" : 1,
-    \\      "byteOffset" : 0,
-    \\      "componentType" : 5126,
-    \\      "count" : 3,
-    \\      "type" : "VEC3",
-    \\      "max" : [ 1.0, 1.0, 0.0 ],
-    \\      "min" : [ 0.0, 0.0, 0.0 ]
+    \\      "indices" : {
+    \\        "bufferView" : 2,
+    \\        "byteOffset" : 0,
+    \\        "componentType" : 5123
+    \\      },
+    \\      "values" : {
+    \\        "bufferView" : 3,
+    \\        "byteOffset" : 0
+    \\      }
     \\    }
-    \\  ],
+    \\  } ],
     \\  
     \\  "asset" : {
     \\    "version" : "2.0"
@@ -142,7 +149,7 @@ export fn frame() void {
 
     sokol.debugtext.canvas(sokol.app.widthf() * 0.5, sokol.app.heightf() * 0.5);
     sokol.debugtext.pos(0.5, 0.5);
-    sokol.debugtext.puts("minimal_gltf");
+    sokol.debugtext.puts(title);
 
     sg.beginPass(.{
         .action = state.pass_action,
@@ -207,7 +214,7 @@ pub fn main() void {
         .event_cb = event,
         .width = 800,
         .height = 600,
-        .window_title = "rowmath: examples/sokol/camera_simple",
+        .window_title = title,
         .icon = .{ .sokol_default = true },
         .logger = .{ .func = sokol.log.func },
     });
