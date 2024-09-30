@@ -41,14 +41,16 @@ pub fn getImageBytes(self: *@This(), image_index: u32) ![]const u8 {
 
 pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T {
     const accessor = self.gltf.accessors[accessor_index];
-    std.debug.assert(@sizeOf(T) == accessor.stride());
-
-    if (accessor.bufferView) |bufferView_index| {
-        const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
-        const bytes = bufferViewBytes[accessor.byteOffset .. accessor.byteOffset + accessor.count * accessor.stride()];
-        return @alignCast(std.mem.bytesAsSlice(T, bytes));
+    if (@sizeOf(T) == accessor.stride()) {
+        if (accessor.bufferView) |bufferView_index| {
+            const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
+            const bytes = bufferViewBytes[accessor.byteOffset .. accessor.byteOffset + accessor.count * accessor.stride()];
+            return @alignCast(std.mem.bytesAsSlice(T, bytes));
+        } else {
+            unreachable;
+        }
     } else {
-        unreachable;
+        return error.AccessorStrideNotEquals;
     }
 }
 

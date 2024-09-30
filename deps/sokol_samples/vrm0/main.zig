@@ -16,7 +16,7 @@ const state = struct {
     var scene = Scene{};
 };
 
-const load_file = "UniVRM/Alicia_vrm-0.51/Alicia_vrm-0.51.vrm";
+const load_file = "UniVRM/AliciaSolid_vrm-0.51.vrm";
 
 export fn init() void {
     sg.setup(.{
@@ -44,7 +44,7 @@ export fn init() void {
     gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
 }
 
-fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf), bin:?[]const u8) void {
+fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf), bin: ?[]const u8) void {
     state.gltf = gltf;
     std.debug.print("{s}\n", .{gltf.value});
     state.scene.load(gltf, bin) catch |e| {

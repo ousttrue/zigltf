@@ -23,11 +23,11 @@ const Attributes = struct {
         try writer.print("[POS=>#{}]", .{self.POSITION});
         // }
         if (self.NORMAL) |NORMAL| try writer.print("[NOM=>#{}]", .{NORMAL});
-        if (self.TANGENT) |TANGENT| try writer.print("[NOM=>#{}]", .{TANGENT});
-        if (self.TEXCOORD_0) |TEXCOORD_0| try writer.print("[NOM=>#{}]", .{TEXCOORD_0});
-        if (self.COLOR_0) |COLOR_0| try writer.print("[NOM=>#{}]", .{COLOR_0});
-        if (self.JOINTS_0) |JOINTS_0| try writer.print("[NOM=>#{}]", .{JOINTS_0});
-        if (self.WEIGHTS_0) |WEIGHTS_0| try writer.print("[NOM=>#{}]", .{WEIGHTS_0});
+        if (self.TANGENT) |TANGENT| try writer.print("[TAN=>#{}]", .{TANGENT});
+        if (self.TEXCOORD_0) |TEXCOORD_0| try writer.print("[TEX=>#{}]", .{TEXCOORD_0});
+        if (self.COLOR_0) |COLOR_0| try writer.print("[COL=>#{}]", .{COLOR_0});
+        if (self.JOINTS_0) |JOINTS_0| try writer.print("[JNT=>#{}]", .{JOINTS_0});
+        if (self.WEIGHTS_0) |WEIGHTS_0| try writer.print("[WET=>#{}]", .{WEIGHTS_0});
     }
 };
 

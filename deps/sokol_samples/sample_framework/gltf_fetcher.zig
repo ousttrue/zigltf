@@ -22,7 +22,7 @@ pub const state = struct {
     var status_buffer: [1024]u8 = undefined;
     var tasks: [32]Task = undefined;
     var task_count: u32 = 0;
-    var fetch_buffer: [1024 * 1024]u8 = undefined;
+    var fetch_buffer: [1024 * 1024 * 32]u8 = undefined;
 };
 
 pub fn init(allocator: std.mem.Allocator) void {
@@ -69,6 +69,7 @@ fn getGlb(gltf_or_glb: []const u8) zigltf.Glb {
 }
 
 export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
+    std.debug.print("fetch_callback\n", .{});
     if (response.*.fetched) {
         const user: *const Task = @ptrCast(@alignCast(response.*.user_data));
         switch (user.*) {
@@ -112,6 +113,6 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
             },
         }
     } else if (response.*.failed) {
-        // state.status = "fetch fail";
+        state.status = "fetch fail";
     }
 }

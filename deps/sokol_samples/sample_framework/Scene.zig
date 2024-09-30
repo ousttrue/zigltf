@@ -95,7 +95,6 @@ pub fn load(
             const pos_accessor = gltf.accessors[primitive.attributes.POSITION];
 
             {
-                // position
                 const positions = try gltf_buffer.getAccessorBytes(
                     [3]f32,
                     primitive.attributes.POSITION,
@@ -127,18 +126,60 @@ pub fn load(
 
             if (primitive.indices) |indices_accessor_index| {
                 // indies
-                const indices = try gltf_buffer.getAccessorBytes(
-                    u16,
-                    indices_accessor_index,
-                );
-                for (indices, 0..) |index, i| {
-                    mesh_indices.items[index_count + i] = index + @as(
-                        u16,
-                        @intCast(vertex_count),
-                    );
+                const index_accessor = gltf.accessors[indices_accessor_index];
+                if (!std.mem.eql(u8, index_accessor.type, "SCALAR")) {
+                    return error.IndexNotScalar;
+                }
+                switch (index_accessor.componentType) {
+                    5121 => {
+                        // byte
+                        const indices = try gltf_buffer.getAccessorBytes(
+                            u8,
+                            indices_accessor_index,
+                        );
+                        for (indices, 0..) |index, i| {
+                            mesh_indices.items[index_count + i] = @as(
+                                u16,
+                                @intCast(index),
+                            ) + @as(
+                                u16,
+                                @intCast(vertex_count),
+                            );
+                        }
+                    },
+                    5123 => {
+                        // ushort
+                        const indices = try gltf_buffer.getAccessorBytes(
+                            u16,
+                            indices_accessor_index,
+                        );
+                        for (indices, 0..) |index, i| {
+                            mesh_indices.items[index_count + i] = index + @as(
+                                u16,
+                                @intCast(vertex_count),
+                            );
+                        }
+                    },
+                    5125 => {
+                        // uint
+                        const indices = try gltf_buffer.getAccessorBytes(
+                            u32,
+                            indices_accessor_index,
+                        );
+                        for (indices, 0..) |index, i| {
+                            mesh_indices.items[index_count + i] = @as(
+                                // TODO
+                                u16,
+                                @intCast(index),
+                            ) + @as(
+                                u16,
+                                @intCast(vertex_count),
+                            );
+                        }
+                    },
+                    else => unreachable,
                 }
 
-                const index_accessor = gltf.accessors[indices_accessor_index];
                 const material = if (primitive.material) |material_index|
                     gltf.materials[material_index]
                 else
