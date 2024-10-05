@@ -144,14 +144,21 @@ export fn init() void {
         @panic("parseFromSlice");
     };
 
+    framework.gltf_fetcher.init(allocator);
+    framework.gltf_fetcher.set_gltf(parsed, null, &on_load) catch @panic("set_gltf");
+}
+
+fn on_load(parsed: std.json.Parsed(zigltf.Gltf), binmap: std.StringHashMap([]const u8)) void {
     // build
-    state.scene.load(parsed, &.{}) catch |e| {
+    state.scene.load(parsed, binmap) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");
     };
 }
 
 export fn frame() void {
+    sokol.fetch.dowork();
+
     state.input.screen_width = sokol.app.widthf();
     state.input.screen_height = sokol.app.heightf();
     state.orbit.frame(state.input);
@@ -160,6 +167,8 @@ export fn frame() void {
     sokol.debugtext.canvas(sokol.app.widthf() * 0.5, sokol.app.heightf() * 0.5);
     sokol.debugtext.pos(0.5, 0.5);
     sokol.debugtext.puts(title);
+    sokol.debugtext.puts("\n");
+    sokol.debugtext.puts(framework.gltf_fetcher.state.status);
 
     sg.beginPass(.{
         .action = state.pass_action,

@@ -39,26 +39,26 @@ pub fn build(b: *std.Build) void {
     });
 
     // asset
+    const asset_wf = b.addNamedWriteFiles("assets");
+    b.default_step.dependOn(&asset_wf.step);
+    {
+        _ = asset_wf.addCopyDirectory(b.path("assets"), "", .{});
+    }
     {
         const test_models = b.dependency("gltf-test-models", .{});
-        const asset_wf = b.addNamedWriteFiles("glTF-Sample-Assets");
         {
             const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
-            _ = asset_wf.addCopyDirectory(wf.getDirectory(), "", .{});
+            _ = asset_wf.addCopyDirectory(wf.getDirectory(), "glTF-Sample-Assets", .{});
         }
-        b.default_step.dependOn(&asset_wf.step);
     }
     {
         const test_models = b.dependency("univrm", .{});
-        const asset_wf = b.addNamedWriteFiles("UniVRM");
         {
-            // const wf = test_models.namedWriteFiles("UniVRM");
             _ = asset_wf.addCopyFile(
                 test_models.path("Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"),
-                "AliciaSolid_vrm-0.51.vrm",
+                "univrm/AliciaSolid_vrm-0.51.vrm",
             );
         }
-        b.default_step.dependOn(&asset_wf.step);
     }
 
     // sample_framework

@@ -58,7 +58,7 @@ pub fn deinit(self: *@This()) void {
 pub fn load(
     self: *@This(),
     json: std.json.Parsed(zigltf.Gltf),
-    bin: ?[]const u8,
+    binmap: std.StringHashMap([]const u8),
 ) !void {
     std.debug.print("{s}\n", .{json.value});
     self.gltf = json;
@@ -77,7 +77,7 @@ pub fn load(
     var gltf_buffer = zigltf.GltfBuffer.init(
         self.allocator,
         gltf,
-        if (bin) |b| b else &.{},
+        binmap,
     );
     defer gltf_buffer.deinit();
 

@@ -53,6 +53,24 @@ export const GROUPS: ItemGroupType[] = [
           },
         ],
       },
+      {
+        name: 'simple_material',
+        links: [
+          {
+            name: 'glTF-Tutorials',
+            url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_011_SimpleMaterial.html',
+          },
+        ],
+      },
+      {
+        name: 'simple_texture',
+        links: [
+          {
+            name: 'glTF-Tutorials',
+            url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_013_SimpleTexture.html',
+          },
+        ],
+      },
     ],
   },
   {

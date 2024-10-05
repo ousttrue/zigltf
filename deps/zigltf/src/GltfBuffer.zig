@@ -6,19 +6,17 @@ pub const GltfBuffer = @This();
 
 allocator: std.mem.Allocator,
 gltf: Gltf,
-bin: []const u8,
 uriMap: std.StringHashMap([]const u8),
 
 pub fn init(
     allocator: std.mem.Allocator,
     gltf: Gltf,
-    bin: []const u8,
+    binmap: std.StringHashMap([]const u8),
 ) @This() {
     return .{
         .allocator = allocator,
         .gltf = gltf,
-        .bin = bin,
-        .uriMap = std.StringHashMap([]const u8).init(allocator),
+        .uriMap = binmap,
     };
 }
 
@@ -32,8 +30,11 @@ pub fn getImageBytes(self: *@This(), image_index: u32) ![]const u8 {
     if (image.bufferView) |bufferView_index| {
         return try self.getBufferViewBytes(bufferView_index);
     } else if (image.uri) |uri| {
-        _ = uri;
-        @panic("image.uri not implemented");
+        if (self.uriMap.getPtr(uri)) |bytes| {
+            return bytes.*;
+        } else {
+            @panic("image.uri not implemented");
+        }
     } else {
         unreachable;
     }
@@ -111,7 +112,7 @@ pub fn getBufferBytes(self: *@This(), buffer_index: u32) ![]const u8 {
     if (buffer.uri) |uri| {
         return try self.getUriBytes(uri);
     } else {
-        return self.bin;
+        return try self.getUriBytes("");
     }
 }
 

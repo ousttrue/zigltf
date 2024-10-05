@@ -21,24 +21,12 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
 
-        var asset_installs: [2]*std.Build.Step.InstallDir = undefined;
-
-        {
-            const asset_wf = samples_deps.namedWriteFiles("glTF-Sample-Assets");
-            asset_installs[0] = b.addInstallDirectory(.{
-                .source_dir = asset_wf.getDirectory(),
-                .install_dir = .prefix,
-                .install_subdir = "web/glTF-Sample-Assets",
-            });
-        }
-        {
-            const asset_wf = samples_deps.namedWriteFiles("UniVRM");
-            asset_installs[1] = b.addInstallDirectory(.{
-                .source_dir = asset_wf.getDirectory(),
-                .install_dir = .prefix,
-                .install_subdir = "web/UniVRM",
-            });
-        }
+        const asset_wf = samples_deps.namedWriteFiles("assets");
+        const asset_install = b.addInstallDirectory(.{
+            .source_dir = asset_wf.getDirectory(),
+            .install_dir = .prefix,
+            .install_subdir = "web",
+        });
 
         if (target.result.isWasm()) {
             const wasm_wf = samples_deps.namedWriteFiles("wasm");
@@ -48,17 +36,13 @@ pub fn build(b: *std.Build) void {
                 .install_subdir = "",
             });
             b.getInstallStep().dependOn(&wasm_install.step);
-            for (asset_installs) |asset_install| {
-                b.getInstallStep().dependOn(&asset_install.step);
-            }
+            b.getInstallStep().dependOn(&asset_install.step);
         } else {
             for (samples_build.samples) |sample| {
                 const artifact = samples_deps.artifact(sample.name);
 
                 const install = b.addInstallArtifact(artifact, .{});
-                for (asset_installs) |asset_install| {
-                    install.step.dependOn(&asset_install.step);
-                }
+                install.step.dependOn(&asset_install.step);
                 b.getInstallStep().dependOn(&install.step);
 
                 const run = b.addRunArtifact(artifact);

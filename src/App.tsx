@@ -16,7 +16,7 @@ function Item(props: ItemType) {
     <ul>
       {props.links.map((link, i) => (
         <li key={i}>
-          <a href={link.url}>
+          <a href={link.url} target="_blank">
             {"🔗"}{link.name}
           </a>
         </li>))}
@@ -27,7 +27,7 @@ function Item(props: ItemType) {
 function Group(props: ItemGroupType) {
   return (<>
     <div className="item">
-      <a href={props.url}>{"🔗"}{props.name}</a>
+      <a href={props.url} target="_blank">{"🔗"}{props.name}</a>
     </div>
     {props.items.map((props, i) => <Item key={i} {...props} />)}
   </>);
