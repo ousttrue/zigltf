@@ -31,10 +31,21 @@ const Attributes = struct {
     }
 };
 
-const Primitive = struct {
+pub const Primitive = struct {
+    pub const Mode = enum(u32) {
+        POINTS = 0,
+        LINES = 1,
+        LINE_LOOP = 2,
+        LINE_STRIP = 3,
+        TRIANGLES = 4,
+        TRIANGLE_STRIP = 5,
+        TRIANGLE_FAN = 6,
+    };
+
     attributes: Attributes,
     material: ?u32 = null,
     indices: ?u32 = null,
+    mode: ?Mode = null,
 };
 
 name: ?[]const u8 = null,

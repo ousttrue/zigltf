@@ -24,7 +24,8 @@ pip: sg.Pipeline = undefined,
 gltf: ?std.json.Parsed(zigltf.Gltf) = null,
 white_texture: Mesh.Texture = undefined,
 animations: []Animation = &.{},
-currentAnimation: ?usize = null,
+current_animation: ?usize = null,
+node_matrices: []Mat4 = &.{},
 
 pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     self.allocator = allocator;
@@ -135,8 +136,7 @@ pub fn load(
                     return error.IndexNotScalar;
                 }
                 switch (index_accessor.componentType) {
-                    5121 => {
-                        // byte
+                    .byte => {
                         const indices = try gltf_buffer.getAccessorBytes(
                             u8,
                             indices_accessor_index,
@@ -151,8 +151,7 @@ pub fn load(
                             );
                         }
                     },
-                    5123 => {
-                        // ushort
+                    .ushort => {
                         const indices = try gltf_buffer.getAccessorBytes(
                             u16,
                             indices_accessor_index,
@@ -164,8 +163,7 @@ pub fn load(
                             );
                         }
                     },
-                    5125 => {
-                        // uint
+                    .uint => {
                         const indices = try gltf_buffer.getAccessorBytes(
                             u32,
                             indices_accessor_index,
@@ -302,75 +300,73 @@ pub fn load(
         }
 
         self.animations = try animations.toOwnedSlice();
-        self.currentAnimation = 0;
+        self.current_animation = 0;
     }
+
+    var node_matrices = std.ArrayList(Mat4).init(self.allocator);
+    defer node_matrices.deinit();
+    try node_matrices.resize(gltf.nodes.len);
+    self.node_matrices = try node_matrices.toOwnedSlice();
+    _ = self.update(0);
 }
 
-pub fn update(self: @This(), time: f32) ?f32 {
+pub fn update(self: *@This(), time: f32) ?f32 {
     const gltf = self.gltf orelse {
         return null;
     };
 
-    const current = self.currentAnimation orelse {
-        return null;
-    };
-
-    if (current >= self.animations.len) {
-        return null;
-    }
-
-    const animation = &self.animations[current];
-    const looptime = animation.loopTime(time);
-    for (animation.curves) |curve| {
-        switch (curve.target) {
-            .translation => |values| {
-                const t = values.sample(looptime);
-                gltf.value.nodes[curve.node_index].translation = .{
-                    t.x,
-                    t.y,
-                    t.z,
-                };
-            },
-            .rotation => |values| {
-                const r = values.sample(looptime);
-                gltf.value.nodes[curve.node_index].rotation = .{
-                    r.x,
-                    r.y,
-                    r.z,
-                    r.w,
-                };
-            },
-            .scale => |values| {
-                _ = values;
-                unreachable;
-            },
-            .weights => |values| {
-                _ = values;
-                unreachable;
-            },
+    var _looptime: ?f32 = null;
+    if (self.current_animation) |current| {
+        if (current < self.animations.len) {
+            const animation = &self.animations[current];
+            const looptime = animation.loopTime(time);
+            _looptime = looptime;
+            for (animation.curves) |curve| {
+                switch (curve.target) {
+                    .translation => |values| {
+                        const t = values.sample(looptime);
+                        gltf.value.nodes[curve.node_index].translation = .{
+                            t.x,
+                            t.y,
+                            t.z,
+                        };
+                    },
+                    .rotation => |values| {
+                        const r = values.sample(looptime);
+                        gltf.value.nodes[curve.node_index].rotation = .{
+                            r.x,
+                            r.y,
+                            r.z,
+                            r.w,
+                        };
+                    },
+                    .scale => |values| {
+                        _ = values;
+                        unreachable;
+                    },
+                    .weights => |values| {
+                        _ = values;
+                        unreachable;
+                    },
+                }
+            }
         }
     }
-    return looptime;
-}
 
-pub fn draw(self: *@This(), camera: Camera) void {
-    if (self.gltf) |json| {
-        sg.applyPipeline(self.pip);
-        for (json.value.scenes[0].nodes) |root_node_index| {
-            self.draw_node(
-                json.value,
-                camera.viewProjectionMatrix(),
-                root_node_index,
-                Mat4.identity,
-            );
-        }
+    for (gltf.value.scenes[0].nodes) |root_node_index| {
+        self.update_node_matrix(
+            gltf.value,
+            root_node_index,
+            Mat4.identity,
+        );
     }
+
+    return _looptime;
 }
 
-fn draw_node(
+fn update_node_matrix(
     self: *@This(),
     gltf: zigltf.Gltf,
-    vp: Mat4,
     node_index: u32,
     parent_matrix: Mat4,
 ) void {
@@ -406,13 +402,34 @@ fn draw_node(
         break :block Mat4.trs(.{ .t = t, .r = r, .s = s });
     };
     const model_matrix = local_matrix.mul(parent_matrix);
-
-    if (node.mesh) |mesh_index| {
-        self.draw_mesh(mesh_index, vp, model_matrix);
-    }
+    self.node_matrices[node_index] = model_matrix;
 
     for (node.children) |child_node_index| {
-        self.draw_node(gltf, vp, child_node_index, model_matrix);
+        self.update_node_matrix(gltf, child_node_index, model_matrix);
+    }
+}
+
+pub fn draw(self: *@This(), camera: Camera) void {
+    if (self.gltf) |json| {
+        sg.applyPipeline(self.pip);
+        const vp = camera.viewProjectionMatrix();
+        for (0..json.value.nodes.len) |i| {
+            self.draw_node(json.value, vp, i);
+        }
+    }
+}
+
+fn draw_node(
+    self: *@This(),
+    gltf: zigltf.Gltf,
+    vp: Mat4,
+    node_index: usize,
+) void {
+    const node = gltf.nodes[node_index];
+
+    const model_matrix = self.node_matrices[node_index];
+    if (node.mesh) |mesh_index| {
+        self.draw_mesh(mesh_index, vp, model_matrix);
     }
 }
 

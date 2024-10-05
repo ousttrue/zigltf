@@ -11,6 +11,7 @@ const Mesh = @import("Mesh.zig");
 const Node = @import("Node.zig");
 const Skin = @import("Skin.zig");
 const Scene = @import("Scene.zig");
+const Camera = @import("Camera.zig");
 const Animation = @import("Animation.zig");
 pub const Gltf = @This();
 
@@ -19,6 +20,7 @@ buffers: []Buffer = &.{},
 bufferViews: []BufferView = &.{},
 accessors: []Accessor = &.{},
 images: []Image = &.{},
+samplers: []Sampler = &.{},
 textures: []Texture = &.{},
 materials: []Material = &.{},
 meshes: []Mesh = &.{},
@@ -27,6 +29,7 @@ skins: []Skin = &.{},
 scenes: []Scene = &.{},
 scene: u32 = 0,
 animations: []Animation = &.{},
+cameras: []Camera = &.{},
 
 fn print_list(writer: anytype, name: []const u8, list: anytype) !void {
     if (list.len > 0) {
@@ -54,6 +57,7 @@ pub fn format(
     try print_list(writer, "bufferViews", self.bufferViews);
     try print_list(writer, "accessors", self.accessors);
     try print_list(writer, "images", self.images);
+    try print_list(writer, "samplers", self.samplers);
     try print_list(writer, "textures", self.textures);
     try print_list(writer, "materials", self.materials);
     try print_list(writer, "meshes", self.meshes);
@@ -61,6 +65,7 @@ pub fn format(
     try print_list(writer, "skins", self.skins);
     try print_list(writer, "scenes", self.scenes);
     try print_list(writer, "animations", self.animations);
+    try print_list(writer, "cameras", self.cameras);
 
     try writer.print("}}\n", .{});
 }

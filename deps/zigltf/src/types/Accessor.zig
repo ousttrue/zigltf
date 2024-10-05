@@ -1,27 +1,36 @@
 const std = @import("std");
 const format_helper = @import("format_helper.zig");
 pub const AccessorSparse = @import("AccessorSparse.zig");
+
+pub const ComponentType = enum(u32) {
+    sbyte = 5120,
+    byte = 5121,
+    short = 5122,
+    ushort = 5123,
+    uint = 5125,
+    float = 5126,
+
+    pub fn byteSize(componentType: @This()) u32 {
+        return switch (componentType) {
+            .byte => 1,
+            .sbyte => 1,
+            .short => 2,
+            .ushort => 2,
+            .uint => 4,
+            .float => 4,
+        };
+    }
+};
+
 pub const Accessor = @This();
 
 name: ?[]const u8 = null,
-componentType: u32,
+componentType: ComponentType,
 type: []const u8,
 count: u32,
 bufferView: ?u32 = null,
 byteOffset: u32 = 0,
 sparse: ?AccessorSparse = null,
-
-fn componentTypeToStr(componentType: u32) []const u8 {
-    return switch (componentType) {
-        5120 => "sbyte",
-        5121 => "byte",
-        5122 => "short",
-        5123 => "ushort",
-        5125 => "uint",
-        5126 => "float",
-        else => "unknown",
-    };
-}
 
 fn typeToSuffix(type_: []const u8) []const u8 {
     if (std.mem.eql(u8, "SCALAR", type_)) {
@@ -55,7 +64,7 @@ pub fn format(
         try writer.print("{s}:", .{name});
     }
     try writer.print("{s}{s}[{}]", .{
-        componentTypeToStr(self.componentType),
+        @tagName(self.componentType),
         typeToSuffix(self.type),
         self.count,
     });
@@ -81,18 +90,6 @@ pub fn format(
     }
 }
 
-fn componentByteSize(componentType: u32) u32 {
-    return switch (componentType) {
-        5120 => 1,
-        5121 => 1,
-        5122 => 2,
-        5123 => 2,
-        5125 => 4,
-        5126 => 4,
-        else => unreachable,
-    };
-}
-
 fn typeCount(type_: []const u8) u32 {
     if (std.mem.eql(u8, "SCALAR", type_)) {
         return 1;
@@ -114,5 +111,5 @@ fn typeCount(type_: []const u8) u32 {
 }
 
 pub fn stride(self: @This()) u32 {
-    return componentByteSize(self.componentType) * typeCount(self.type);
+    return self.componentType.byteSize() * typeCount(self.type);
 }

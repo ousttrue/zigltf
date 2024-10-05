@@ -10,6 +10,7 @@ scale: ?[3]f32 = null,
 children: []u32 = &.{},
 mesh: ?u32 = null,
 skin: ?u32 = null,
+camera: ?u32 = null,
 
 pub fn format(
     self: @This(),
@@ -31,5 +32,6 @@ pub fn format(
     try writer.print("  children: {any}\n", .{self.children});
     try format_helper.number_field(writer, 2, "mesh", self.mesh, .{});
     try format_helper.number_field(writer, 2, "skin", self.skin, .{});
+    try format_helper.number_field(writer, 2, "camera", self.camera, .{});
     try writer.print("}}", .{});
 }
