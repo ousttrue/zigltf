@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { GROUPS, type ItemGroupType, type ItemType } from './data';
 import "./App.css";
+import github_svg from './github-mark.svg';
 const BASE_URL = import.meta.env.BASE_URL;
 
 function Item(props: ItemType) {
@@ -16,7 +17,7 @@ function Item(props: ItemType) {
       {props.links.map((link, i) => (
         <li key={i}>
           <a href={link.url}>
-            {link.name}
+            {"🔗"}{link.name}
           </a>
         </li>))}
     </ul>
@@ -26,7 +27,7 @@ function Item(props: ItemType) {
 function Group(props: ItemGroupType) {
   return (<>
     <div className="item">
-      <a href={props.url}>{props.name}</a>
+      <a href={props.url}>{"🔗"}{props.name}</a>
     </div>
     {props.items.map((props, i) => <Item key={i} {...props} />)}
   </>);
@@ -36,7 +37,7 @@ function Home() {
   return (<>
     <div className="container">
       <div className="item">
-        <a href="https://github.com/ousttrue/zigltf">github</a>
+        <a href="https://github.com/ousttrue/zigltf"><img width={150} src={github_svg} /></a>
       </div>
       {GROUPS.map((props, i) => <Group key={i} {...props} />)}
     </div>
