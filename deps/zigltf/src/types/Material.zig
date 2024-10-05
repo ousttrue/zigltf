@@ -6,7 +6,7 @@ pub const PbrMetallicRoughness = struct {
     baseColorFactor: ?struct { f32, f32, f32, f32 } = null,
     baseColorTexture: ?struct {
         index: u32,
-        texCoord: ?u32,
+        texCoord: ?u32 = null,
     } = null,
 
     pub fn format(

@@ -178,6 +178,14 @@ pub const samples = [_]Sample{
         .name = "simple_meshes",
         .root_source_file = "tutorials/simple_meshes/main.zig",
     },
+    .{
+        .name = "simple_material",
+        .root_source_file = "tutorials/simple_material/main.zig",
+    },
+    .{
+        .name = "simple_texture",
+        .root_source_file = "tutorials/simple_texture/main.zig",
+    },
     //
     .{
         .name = "glb",

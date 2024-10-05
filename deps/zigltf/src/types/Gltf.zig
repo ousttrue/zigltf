@@ -4,6 +4,7 @@ const Buffer = @import("Buffer.zig");
 const BufferView = @import("BufferView.zig");
 const Accessor = @import("Accessor.zig");
 const Image = @import("Image.zig");
+const Sampler = @import("Sampler.zig");
 const Texture = @import("Texture.zig");
 const Material = @import("Material.zig");
 const Mesh = @import("Mesh.zig");
