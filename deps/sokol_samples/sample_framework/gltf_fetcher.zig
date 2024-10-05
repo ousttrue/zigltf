@@ -31,7 +31,8 @@ pub const state = struct {
     var task_count: u32 = 0;
     var fetch_buffer: [1024 * 1024 * 32]u8 = undefined;
     //
-    var json: ?std.json.Parsed(zigltf.Gltf) = null;
+    var path: []const u8 = undefined;
+    var json: std.json.Parsed(zigltf.Gltf) = undefined;
     var binmap: std.StringHashMap([]const u8) = undefined;
 };
 
@@ -50,6 +51,7 @@ pub fn init(allocator: std.mem.Allocator) void {
 }
 
 pub fn fetch_gltf(path: [:0]const u8, on_gltf: *const GltfCallback) !void {
+    state.path = path;
     state.tasks[state.task_count] = .{
         .gltf = .{
             .path = path,
@@ -66,10 +68,54 @@ pub fn fetch_gltf(path: [:0]const u8, on_gltf: *const GltfCallback) !void {
     });
 }
 
+fn fetch_buffer(index: u32, on_gltf: *const GltfCallback) !void {
+    const parsed = state.json;
+
+    if (index >= parsed.value.buffers.len) {
+        try fetch_image(0, on_gltf);
+    } else {
+        // fetch next
+        const buffer = parsed.value.buffers[index];
+
+        if (buffer.uri) |uri| {
+            if (zigltf.Buffer.base64DecodeSize(uri)) |_| {
+                try fetch_buffer(index + 1, on_gltf);
+            } else {
+                state.status = std.fmt.bufPrintZ(
+                    &state.status_buffer,
+                    "fetch buffer[{}]: {s}\n",
+                    .{ index, uri },
+                ) catch @panic("bufPrintZ");
+
+                state.tasks[state.task_count] = .{
+                    .buffer = .{
+                        .index = index,
+                        .callback = on_gltf,
+                    },
+                };
+                defer state.task_count += 1;
+
+                // const base = ;
+                const uriz = if (std.fs.path.dirname(state.path)) |dir|
+                    try std.fmt.allocPrintZ(state.allocator, "{s}/{s}", .{ dir, uri })
+                else
+                    try std.fmt.allocPrintZ(state.allocator, "{s}", .{uri});
+
+                _ = sokol.fetch.send(.{
+                    .path = &uriz[0],
+                    .callback = fetch_callback,
+                    .buffer = sokol.fetch.asRange(&state.fetch_buffer),
+                    .user_data = sokol.fetch.asRange(&state.tasks[state.task_count]),
+                });
+            }
+        } else {
+            try fetch_buffer(index + 1, on_gltf);
+        }
+    }
+}
+
 fn fetch_image(index: u32, on_gltf: *const GltfCallback) !void {
-    const parsed = state.json orelse {
-        return error.no_gltf;
-    };
+    const parsed = state.json;
 
     if (index >= parsed.value.images.len) {
         on_gltf(parsed, state.binmap);
@@ -78,28 +124,36 @@ fn fetch_image(index: u32, on_gltf: *const GltfCallback) !void {
         const image = parsed.value.images[index];
 
         if (image.uri) |uri| {
-            state.status = std.fmt.bufPrintZ(
-                &state.status_buffer,
-                "fetch image[{}]: {s}\n",
-                .{ index, uri },
-            ) catch @panic("bufPrintZ");
+            if (zigltf.Buffer.base64DecodeSize(uri)) |_| {
+                try fetch_image(index + 1, on_gltf);
+            } else {
+                state.status = std.fmt.bufPrintZ(
+                    &state.status_buffer,
+                    "fetch image[{}]: {s}\n",
+                    .{ index, uri },
+                ) catch @panic("bufPrintZ");
 
-            state.tasks[state.task_count] = .{
-                .image = .{
-                    .index = index,
-                    .callback = on_gltf,
-                },
-            };
-            defer state.task_count += 1;
+                state.tasks[state.task_count] = .{
+                    .image = .{
+                        .index = index,
+                        .callback = on_gltf,
+                    },
+                };
+                defer state.task_count += 1;
 
-            const uriz = try std.fmt.allocPrintZ(state.allocator, "{s}", .{uri});
+                // const base = ;
+                const uriz = if (std.fs.path.dirname(state.path)) |dir|
+                    try std.fmt.allocPrintZ(state.allocator, "{s}/{s}", .{ dir, uri })
+                else
+                    try std.fmt.allocPrintZ(state.allocator, "{s}", .{uri});
 
-            _ = sokol.fetch.send(.{
-                .path = &uriz[0],
-                .callback = fetch_callback,
-                .buffer = sokol.fetch.asRange(&state.fetch_buffer),
-                .user_data = sokol.fetch.asRange(&state.tasks[state.task_count]),
-            });
+                _ = sokol.fetch.send(.{
+                    .path = &uriz[0],
+                    .callback = fetch_callback,
+                    .buffer = sokol.fetch.asRange(&state.fetch_buffer),
+                    .user_data = sokol.fetch.asRange(&state.tasks[state.task_count]),
+                });
+            }
         } else {
             try fetch_image(index + 1, on_gltf);
         }
@@ -119,21 +173,30 @@ fn get_glb(gltf_or_glb: []const u8) zigltf.Glb {
 }
 
 pub fn set_gltf(
+    path: []const u8,
     parsed: std.json.Parsed(zigltf.Gltf),
     _bin: ?[]const u8,
     callback: *const GltfCallback,
 ) !void {
+    state.path = path;
     state.json = parsed;
     if (_bin) |bin| {
         try state.binmap.put("", bin);
     }
 
-    try fetch_image(0, callback);
+    try fetch_buffer(0, callback);
 }
 
 export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
     std.debug.print("fetch_callback\n", .{});
     if (response.*.fetched) {
+        const _bytes = to_slice(
+            @ptrCast(response.*.data.ptr),
+            response.*.data.size,
+        );
+        // copy fetch buffer to allocated
+        const copy = state.allocator.dupe(u8, _bytes) catch @panic("dupe");
+
         const user: *const Task = @ptrCast(@alignCast(response.*.user_data));
         switch (user.*) {
             .gltf => |gltf_task| {
@@ -143,12 +206,7 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                     .{response.*.data.size},
                 ) catch @panic("bufPrintZ");
 
-                const bytes = to_slice(
-                    @ptrCast(response.*.data.ptr),
-                    response.*.data.size,
-                );
-
-                const glb = get_glb(bytes);
+                const glb = get_glb(copy);
 
                 if (std.json.parseFromSlice(
                     zigltf.Gltf,
@@ -158,7 +216,7 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                         .ignore_unknown_fields = true,
                     },
                 )) |parsed| {
-                    set_gltf(parsed, glb.bin, gltf_task.callback) catch @panic("set_gltf");
+                    set_gltf(state.path, parsed, glb.bin, gltf_task.callback) catch @panic("set_gltf");
                 } else |e| {
                     state.status = std.fmt.bufPrintZ(
                         &state.status_buffer,
@@ -167,28 +225,29 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                     ) catch @panic("bufPrintZ");
                 }
             },
-            .image => |image_task| {
-                const bytes = to_slice(
-                    @ptrCast(response.*.data.ptr),
-                    response.*.data.size,
-                );
+            .buffer => |task| {
+                const parsed = state.json;
 
-                const parsed = state.json orelse {
-                    @panic("no gltf");
+                const buffer = parsed.value.buffers[task.index];
+                const uri = buffer.uri orelse {
+                    @panic("no uri");
                 };
 
-                const image = parsed.value.images[image_task.index];
+                state.binmap.put(uri, copy) catch @panic("put");
+
+                fetch_buffer(task.index + 1, task.callback) catch @panic("fetch_image");
+            },
+            .image => |task| {
+                const parsed = state.json;
+
+                const image = parsed.value.images[task.index];
                 const uri = image.uri orelse {
                     @panic("no uri");
                 };
 
-                state.binmap.put(uri, bytes) catch @panic("put");
+                state.binmap.put(uri, copy) catch @panic("put");
 
-                fetch_image(image_task.index + 1, image_task.callback) catch @panic("fetch_image");
-            },
-            .buffer => |buffer_task| {
-                _ = buffer_task;
-                unreachable;
+                fetch_image(task.index + 1, task.callback) catch @panic("fetch_image");
             },
         }
     } else if (response.*.failed) {

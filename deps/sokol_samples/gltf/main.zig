@@ -16,7 +16,7 @@ const state = struct {
     var scene = Scene{};
 };
 
-const load_file = "glTF-Sample-Assets/Models/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf";
+const load_file = "glTF-Sample-Assets/Models/DamagedHelmet/glTF/DamagedHelmet.gltf";
 
 export fn init() void {
     sg.setup(.{

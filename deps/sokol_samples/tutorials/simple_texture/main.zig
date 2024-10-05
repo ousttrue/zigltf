@@ -145,7 +145,7 @@ export fn init() void {
     };
 
     framework.gltf_fetcher.init(allocator);
-    framework.gltf_fetcher.set_gltf(parsed, null, &on_load) catch @panic("set_gltf");
+    framework.gltf_fetcher.set_gltf("tmp.gltf", parsed, null, &on_load) catch @panic("set_gltf");
 }
 
 fn on_load(parsed: std.json.Parsed(zigltf.Gltf), binmap: std.StringHashMap([]const u8)) void {

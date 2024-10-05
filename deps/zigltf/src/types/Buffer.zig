@@ -19,17 +19,14 @@ pub fn base64FromUri(uri: []const u8) ?[]const u8 {
     return null;
 }
 
-pub fn base64DecodeSize(self: @This()) ?u32 {
-    const uri = self.uri orelse {
-        return null;
-    };
+pub fn base64DecodeSize(uri: []const u8) ?u32 {
     const base64 = base64FromUri(uri) orelse {
         return null;
     };
     const len = std.base64.standard.Decoder.calcSizeForSlice(base64) catch {
         return null;
     };
-    return len;
+    return @intCast(len);
 }
 
 pub fn format(
@@ -45,13 +42,9 @@ pub fn format(
     });
 
     if (self.uri) |uri| {
-        if (base64FromUri(uri)) |base64| {
+        if (base64DecodeSize(uri)) |size| {
             // try writer.print(" => {s} ", .{uri});
-            if (std.base64.standard_no_pad.Decoder.calcSizeForSlice(base64)) |len| {
-                try writer.print(" =[base64]> {}bytes", .{len});
-            } else |e| {
-                try writer.print(" =[base64]> {s}", .{@errorName(e)});
-            }
+            try writer.print(" =[base64]> {}bytes", .{size});
         } else {
             try writer.print(" => {s} ", .{uri});
         }
