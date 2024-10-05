@@ -174,6 +174,10 @@ pub const samples = [_]Sample{
         .name = "animation",
         .root_source_file = "tutorials/animation/main.zig",
     },
+    .{
+        .name = "simple_meshes",
+        .root_source_file = "tutorials/simple_meshes/main.zig",
+    },
     //
     .{
         .name = "glb",

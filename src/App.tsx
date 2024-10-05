@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { SAMPLES, type SampleType } from './data';
+import { GROUPS, type ItemGroupType, type ItemType } from './data';
 import "./App.css";
 const BASE_URL = import.meta.env.BASE_URL;
 
-function Sample(props: SampleType) {
+function Item(props: ItemType) {
   return (<div className="item">
     <a href={`${BASE_URL}wasm/${props.name}.html`}>
       {props.name}
@@ -23,13 +23,22 @@ function Sample(props: SampleType) {
   </div>);
 }
 
+function Group(props: ItemGroupType) {
+  return (<>
+    <div className="item">
+      <a href={props.url}>{props.name}</a>
+    </div>
+    {props.items.map((props, i) => <Item key={i} {...props} />)}
+  </>);
+}
+
 function Home() {
   return (<>
     <div className="container">
       <div className="item">
         <a href="https://github.com/ousttrue/zigltf">github</a>
       </div>
-      {SAMPLES.map((props, i) => <Sample key={i} {...props} />)}
+      {GROUPS.map((props, i) => <Group key={i} {...props} />)}
     </div>
   </>);
 }
