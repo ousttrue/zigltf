@@ -8,6 +8,8 @@ const rowmath = @import("rowmath");
 const Camera = rowmath.Camera;
 const Mat4 = rowmath.Mat4;
 const Vec3 = rowmath.Vec3;
+const Vec4 = rowmath.Vec4;
+const Vec2 = rowmath.Vec2;
 const Quat = rowmath.Quat;
 
 const Mesh = @import("Mesh.zig");
@@ -76,6 +78,8 @@ pub fn load(
 
     var mesh_vertices = std.ArrayList(Mesh.Vertex).init(self.allocator);
     defer mesh_vertices.deinit();
+    var skin_vertices = std.ArrayList(Mesh.SkinVertex).init(self.allocator);
+    defer skin_vertices.deinit();
     var mesh_indices = std.ArrayList(u16).init(self.allocator);
     defer mesh_indices.deinit();
 
@@ -96,6 +100,7 @@ pub fn load(
             index_count += index_accessor.count;
         }
         try mesh_vertices.resize(vertex_count);
+        try skin_vertices.resize(0);
         try mesh_indices.resize(index_count);
 
         vertex_count = 0;
@@ -105,7 +110,7 @@ pub fn load(
 
             {
                 const positions = try gltf_buffer.getAccessorBytes(
-                    [3]f32,
+                    Vec3,
                     primitive.attributes.POSITION,
                 );
                 for (positions, 0..) |pos, i| {
@@ -114,7 +119,7 @@ pub fn load(
             }
             if (primitive.attributes.NORMAL) |normal_accessor_index| {
                 const normals = try gltf_buffer.getAccessorBytes(
-                    [3]f32,
+                    Vec3,
                     normal_accessor_index,
                 );
                 for (normals, 0..) |normal, i| {
@@ -123,11 +128,32 @@ pub fn load(
             }
             if (primitive.attributes.TEXCOORD_0) |tex0_accessor_index| {
                 const tex0s = try gltf_buffer.getAccessorBytes(
-                    [2]f32,
+                    Vec2,
                     tex0_accessor_index,
                 );
                 for (tex0s, 0..) |tex0, i| {
                     mesh_vertices.items[vertex_count + i].uv = tex0;
+                }
+            }
+            if (primitive.attributes.JOINTS_0) |joints0_accessor_index| {
+                if (primitive.attributes.WEIGHTS_0) |weights0_accessor_index| {
+                    if (skin_vertices.items.len != mesh_vertices.items.len) {
+                        try skin_vertices.resize(mesh_vertices.items.len);
+                    }
+                    const joints = try gltf_buffer.getAccessorBytes(
+                        Mesh.UShort4,
+                        joints0_accessor_index,
+                    );
+                    const weights = try gltf_buffer.getAccessorBytes(
+                        Vec4,
+                        weights0_accessor_index,
+                    );
+                    for (joints, weights, 0..) |j, w, i| {
+                        skin_vertices.items[vertex_count + i] = .{
+                            .jonts = j,
+                            .weights = w,
+                        };
+                    }
                 }
             }
 
@@ -230,7 +256,8 @@ pub fn load(
         }
 
         try meshes.append(Mesh.init(
-            mesh_vertices.items,
+            try mesh_vertices.toOwnedSlice(),
+            if (skin_vertices.items.len > 0) try skin_vertices.toOwnedSlice() else null,
             mesh_indices.items,
             try submeshes.toOwnedSlice(),
         ));
@@ -313,10 +340,43 @@ pub fn load(
     defer deforms.deinit();
     var node_matrices = std.ArrayList(Mat4).init(self.allocator);
     defer node_matrices.deinit();
-    for (gltf.nodes, 0..) |node, i| {
-        _ = node;
-        _ = i;
-        try deforms.append(.{});
+    for (gltf.nodes) |node| {
+        if (node.mesh) |mesh_index| {
+            const mesh = &self.meshes[mesh_index];
+            // const morph: ?Deform.Morph = null;
+            // if (node.weights) |weights| {}
+
+            var skin: ?Deform.Skin = null;
+            if (node.skin) |skin_index| {
+                const gltf_skin = gltf.skins[skin_index];
+                const inversed = if (gltf_skin.inverseBindMatrices) |inversed_index|
+                    try gltf_buffer.getAccessorBytes(
+                        Mat4,
+                        inversed_index,
+                    )
+                else blk: {
+                    const inversed = try self.allocator.alloc(Mat4, gltf_skin.joints.len);
+                    for (0..inversed.len) |i| inversed[i] = Mat4.identity;
+                    break :blk inversed;
+                };
+
+                var joints = try self.allocator.alloc(Deform.Skin.Joint, gltf_skin.joints.len);
+                for (gltf_skin.joints, 0..) |node_index, joint_index| {
+                    joints[joint_index] = .{
+                        .node_index = @intCast(node_index),
+                        .bind_matrix = inversed[joint_index],
+                    };
+                }
+
+                skin = Deform.Skin{ .joints = joints };
+            }
+
+            try deforms.append(try Deform.init(
+                self.allocator,
+                mesh,
+                skin,
+            ));
+        }
         try node_matrices.append(Mat4.identity);
     }
     self.node_deforms = try deforms.toOwnedSlice();
@@ -413,12 +473,28 @@ pub fn update(self: *@This(), time: f32) ?f32 {
         }
     }
 
+    // calc world matrix
     for (gltf.value.scenes[0].nodes) |root_node_index| {
         self.update_node_matrix(
             gltf.value,
             root_node_index,
             Mat4.identity,
         );
+    }
+
+    // update mesh deform
+    for (gltf.value.nodes, 0..) |node, node_index| {
+        if (node.mesh) |mesh_index| {
+            const base_mesh = self.meshes[mesh_index];
+            const deform = &self.node_deforms[node_index];
+            if (deform.skin != null or deform.morph != null) {
+                deform.update(
+                    base_mesh.vertices,
+                    base_mesh.skin_vertices,
+                    self.node_matrices,
+                );
+            }
+        }
     }
 
     return _looptime;
@@ -459,7 +535,7 @@ fn update_node_matrix(
                 .z = scale[2],
             };
         }
-        break :block Mat4.trs(.{ .t = t, .r = r, .s = s });
+        break :block Mat4.fromTrs(.{ .t = t, .r = r, .s = s });
     };
     const model_matrix = local_matrix.mul(parent_matrix);
     self.node_matrices[node_index] = model_matrix;
@@ -500,6 +576,18 @@ fn draw_mesh(
     vp: Mat4,
     model: Mat4,
 ) void {
+    var base_mesh = &self.meshes[mesh_index];
+    var deform = &self.node_deforms[node_index];
+    var bind = if (deform.morph == null and deform.skin == null)
+        &base_mesh.bind
+    else blk: {
+        sg.updateBuffer(deform.bind.vertex_buffers[0], .{
+            .ptr = &deform.deform_vertices[0],
+            .size = @sizeOf(Mesh.Vertex) * deform.deform_vertices.len,
+        });
+        break :blk &deform.bind;
+    };
+
     const vs_params = shader.VsParams{
         // rowmath では vec * mat の乗算順なので view_projection
         // glsl では mat * vec の乗算順なので projection_view
@@ -518,8 +606,6 @@ fn draw_mesh(
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
-    var base_mesh = &self.meshes[mesh_index];
-    var deform = &self.node_deforms[node_index];
     var offset: u32 = 0;
     for (base_mesh.submeshes) |*submesh| {
         sg.applyUniforms(
@@ -527,11 +613,6 @@ fn draw_mesh(
             shader.SLOT_submesh_params,
             sg.asRange(&submesh.submesh_params),
         );
-
-        var bind = if (deform.morph == null and deform.skin == null)
-            &base_mesh.bind
-        else
-            &deform.bind;
 
         bind.fs = submesh.color_texture.fs;
         sg.applyBindings(bind.*);
