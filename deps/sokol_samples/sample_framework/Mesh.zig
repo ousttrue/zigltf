@@ -62,18 +62,24 @@ pub const Image = struct {
 pub const Texture = struct {
     fs: sg.StageBindings = sg.StageBindings{},
 
-    pub fn init(image: Image) @This() {
+    pub fn init(image: Image, _sampler: ?sg.SamplerDesc) @This() {
         // init sokol
         var texture = Texture{};
         texture.fs.images[shader.SLOT_colorTexture2D] = sg.allocImage();
         texture.fs.samplers[shader.SLOT_colorTextureSmp] = sg.allocSampler();
-        sg.initSampler(texture.fs.samplers[shader.SLOT_colorTextureSmp], .{
-            .wrap_u = .REPEAT,
-            .wrap_v = .REPEAT,
-            .min_filter = .LINEAR,
-            .mag_filter = .LINEAR,
-            .compare = .NEVER,
-        });
+        sg.initSampler(
+            texture.fs.samplers[shader.SLOT_colorTextureSmp],
+            if (_sampler) |sampler|
+                sampler
+            else
+                sg.SamplerDesc{
+                    .wrap_u = .REPEAT,
+                    .wrap_v = .REPEAT,
+                    .min_filter = .LINEAR,
+                    .mag_filter = .LINEAR,
+                    .compare = .NEVER,
+                },
+        );
 
         // initialize the sokol-gfx texture
         var img_desc = sg.ImageDesc{

@@ -93,8 +93,29 @@ pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T
     } else {
         if (accessor.bufferView) |bufferView_index| {
             const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
-            const bytes = bufferViewBytes[accessor.byteOffset .. accessor.byteOffset + accessor.count * accessor.stride()];
-            return @alignCast(std.mem.bytesAsSlice(T, bytes));
+            const bufferView = self.gltf.bufferViews[bufferView_index];
+
+            const same_stride = if (bufferView.byteStride) |stride|
+                stride == accessor.stride()
+            else
+                true;
+
+            if (same_stride) {
+                const begin = accessor.byteOffset;
+                const end = accessor.byteOffset + accessor.count * accessor.stride();
+                const bytes = bufferViewBytes[begin..end];
+                return @alignCast(std.mem.bytesAsSlice(T, bytes));
+            } else {
+                var buffer = try self.allocator.alloc(T, accessor.count);
+                var p = &bufferViewBytes[0];
+                const stride = bufferView.byteStride.?;
+                for (0..accessor.count) |vertex_index| {
+                    const ptr: *const T = @ptrCast(@alignCast(p));
+                    buffer[vertex_index] = ptr.*;
+                    p = @ptrFromInt(@intFromPtr(p) + stride);
+                }
+                return buffer;
+            }
         } else {
             unreachable;
         }

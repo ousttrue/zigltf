@@ -21,8 +21,8 @@
         },
         // camera etc
         .rowmath = .{
-            .url = "git+https://github.com/ousttrue/rowmath.git#0bfae3e40cfea967346bd8a4d5b2745af8e2b79b",
-            .hash = "1220d127336ca0674f352559883de2420a529f13dcb7fbe55b653364452768c950a4",
+            .url = "git+https://github.com/ousttrue/rowmath.git#cb3792e7b68e6216d19b664c2f6ed455ad7605c5",
+            .hash = "1220f5f558ccc705281457e6083a73332f4b06b3eee98ad1feee35107ea5b7986a9e",
         },
         .@"gltf-test-models" = .{
             .url = "git+https://github.com/ousttrue/gltf-test-models.git#55328b2d063141993373ab8c770c72d7cfda260f",

@@ -49,7 +49,7 @@ pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     pip_desc.layout.attrs[shader.ATTR_vs_aTexCoord].format = .FLOAT2;
     self.pip = sg.makePipeline(pip_desc);
 
-    self.white_texture = Mesh.Texture.init(Mesh.Image.white);
+    self.white_texture = Mesh.Texture.init(Mesh.Image.white, null);
 }
 
 pub fn deinit(self: *@This()) void {
@@ -200,9 +200,13 @@ pub fn load(
                         const texture = gltf.textures[base.index];
                         if (texture.source) |source| {
                             const image_bytes = try gltf_buffer.getImageBytes(source);
+                            const sampler = if (texture.sampler) |sampler_index| gltf.samplers[sampler_index] else null;
                             if (Mesh.Image.init(image_bytes)) |image| {
                                 defer image.deinit();
-                                color_texture = Mesh.Texture.init(image);
+                                color_texture = Mesh.Texture.init(
+                                    image,
+                                    to_sokol_sampler(sampler),
+                                );
                             }
                         }
                     }
@@ -309,6 +313,52 @@ pub fn load(
     self.node_matrices = try node_matrices.toOwnedSlice();
     _ = self.update(0);
 }
+
+fn to_sokol_sampler(_src: ?zigltf.Sampler) ?sg.SamplerDesc {
+    if (_src) |src| {
+        return .{
+            .wrap_u = if (src.wrapS) |wrapS| to_sokol_wrap(wrapS) else .REPEAT,
+            .wrap_v = if (src.wrapT) |wrapT| to_sokol_wrap(wrapT) else .REPEAT,
+            .min_filter = if (src.minFilter) |minFilter|
+                to_sokol_minFilter(minFilter)
+            else
+                .LINEAR,
+            .mag_filter = if (src.magFilter) |magFilter|
+                to_sokol_magFilter(magFilter)
+            else
+                .LINEAR,
+            .compare = .NEVER,
+        };
+    } else {
+        return null;
+    }
+}
+
+fn to_sokol_wrap(src: zigltf.Sampler.WrapMode) sg.Wrap {
+    return switch (src) {
+        .CLAMP_TO_EDGE => .CLAMP_TO_EDGE,
+        .MIRRORED_REPEAT => .MIRRORED_REPEAT,
+        .REPEAT => .REPEAT,
+    };
+}
+fn to_sokol_minFilter(src: zigltf.Sampler.MinFilter) sg.Filter {
+    return switch (src) {
+        .NEAREST => .NEAREST,
+        .LINEAR => .LINEAR,
+        .NEAREST_MIPMAP_NEAREST => .NEAREST, //.NEAREST_MIPMAP_NEAREST,
+        .LINEAR_MIPMAP_NEAREST => .LINEAR, //.LINEAR_MIPMAP_NEAREST,
+        .NEAREST_MIPMAP_LINEAR => .NEAREST, //.NEAREST_MIPMAP_LINEAR,
+        .LINEAR_MIPMAP_LINEAR => .LINEAR, //.LINEAR_MIPMAP_LINEAR,
+    };
+}
+fn to_sokol_magFilter(src: zigltf.Sampler.MagFilter) sg.Filter {
+    return switch (src) {
+        .NEAREST => .NEAREST,
+        .LINEAR => .LINEAR,
+    };
+}
+
+pub const MinFilter = enum(u32) {};
 
 pub fn update(self: *@This(), time: f32) ?f32 {
     const gltf = self.gltf orelse {
