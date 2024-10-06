@@ -11,6 +11,9 @@ const Vec3 = rowmath.Vec3;
 const Quat = rowmath.Quat;
 
 const Mesh = @import("Mesh.zig");
+const Texture = @import("Texture.zig");
+const Image = @import("Image.zig");
+const Deform = @import("Deform.zig");
 const Animation = @import("Animation.zig");
 pub const Scene = @This();
 
@@ -22,10 +25,11 @@ allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
 gltf: ?std.json.Parsed(zigltf.Gltf) = null,
-white_texture: Mesh.Texture = undefined,
+white_texture: Texture = undefined,
 animations: []Animation = &.{},
 current_animation: ?usize = null,
 node_matrices: []Mat4 = &.{},
+node_deforms: []Deform = &.{},
 
 pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     self.allocator = allocator;
@@ -49,7 +53,7 @@ pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     pip_desc.layout.attrs[shader.ATTR_vs_aTexCoord].format = .FLOAT2;
     self.pip = sg.makePipeline(pip_desc);
 
-    self.white_texture = Mesh.Texture.init(Mesh.Image.white, null);
+    self.white_texture = Texture.init(Image.white, null);
 }
 
 pub fn deinit(self: *@This()) void {
@@ -199,9 +203,9 @@ pub fn load(
                         if (texture.source) |source| {
                             const image_bytes = try gltf_buffer.getImageBytes(source);
                             const sampler = if (texture.sampler) |sampler_index| gltf.samplers[sampler_index] else null;
-                            if (Mesh.Image.init(image_bytes)) |image| {
+                            if (Image.init(image_bytes)) |image| {
                                 defer image.deinit();
-                                color_texture = Mesh.Texture.init(
+                                color_texture = Texture.init(
                                     image,
                                     to_sokol_sampler(sampler),
                                 );
@@ -305,9 +309,17 @@ pub fn load(
         self.current_animation = 0;
     }
 
+    var deforms = std.ArrayList(Deform).init(self.allocator);
+    defer deforms.deinit();
     var node_matrices = std.ArrayList(Mat4).init(self.allocator);
     defer node_matrices.deinit();
-    try node_matrices.resize(gltf.nodes.len);
+    for (gltf.nodes, 0..) |node, i| {
+        _ = node;
+        _ = i;
+        try deforms.append(.{});
+        try node_matrices.append(Mat4.identity);
+    }
+    self.node_deforms = try deforms.toOwnedSlice();
     self.node_matrices = try node_matrices.toOwnedSlice();
     _ = self.update(0);
 }
@@ -462,7 +474,7 @@ pub fn draw(self: *@This(), camera: Camera) void {
         sg.applyPipeline(self.pip);
         const vp = camera.viewProjectionMatrix();
         for (0..json.value.nodes.len) |i| {
-            self.draw_node(json.value, vp, i);
+            self.draw_node(json.value, vp, @intCast(i));
         }
     }
 }
@@ -471,17 +483,23 @@ fn draw_node(
     self: *@This(),
     gltf: zigltf.Gltf,
     vp: Mat4,
-    node_index: usize,
+    node_index: u32,
 ) void {
     const node = gltf.nodes[node_index];
 
     const model_matrix = self.node_matrices[node_index];
     if (node.mesh) |mesh_index| {
-        self.draw_mesh(mesh_index, vp, model_matrix);
+        self.draw_mesh(node_index, mesh_index, vp, model_matrix);
     }
 }
 
-fn draw_mesh(self: *@This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
+fn draw_mesh(
+    self: *@This(),
+    node_index: u32,
+    mesh_index: u32,
+    vp: Mat4,
+    model: Mat4,
+) void {
     const vs_params = shader.VsParams{
         // rowmath では vec * mat の乗算順なので view_projection
         // glsl では mat * vec の乗算順なので projection_view
@@ -500,18 +518,23 @@ fn draw_mesh(self: *@This(), mesh_index: u32, vp: Mat4, model: Mat4) void {
     };
     sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
 
-    var mesh = &self.meshes[mesh_index];
-
+    var base_mesh = &self.meshes[mesh_index];
+    var deform = &self.node_deforms[node_index];
     var offset: u32 = 0;
-    for (mesh.submeshes) |*submesh| {
+    for (base_mesh.submeshes) |*submesh| {
         sg.applyUniforms(
             .FS,
             shader.SLOT_submesh_params,
             sg.asRange(&submesh.submesh_params),
         );
 
-        mesh.bind.fs = submesh.color_texture.fs;
-        sg.applyBindings(mesh.bind);
+        var bind = if (deform.morph == null and deform.skin == null)
+            &base_mesh.bind
+        else
+            &deform.bind;
+
+        bind.fs = submesh.color_texture.fs;
+        sg.applyBindings(bind.*);
 
         sg.draw(offset, submesh.draw_count, 1);
 

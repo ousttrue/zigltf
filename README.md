@@ -22,9 +22,9 @@ wasm build.
 - [x] [glb](https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CesiumMilkTruck/glTF-Binary)
   - [x] node
   - [x] texture
-  - [ ] animation
-- [ ] glTF
+  - [x] animation
+- [x] glTF
 - [ ] draco
 - [ ] basisu
-- [ ] vrm-0.x
+- [WIP] vrm-0.x
 - [ ] vrm-1.0
