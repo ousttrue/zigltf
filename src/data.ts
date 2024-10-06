@@ -71,6 +71,24 @@ export const GROUPS: ItemGroupType[] = [
           },
         ],
       },
+      {
+        name: 'morphtarget',
+        links: [
+          {
+            name: 'glTF-Tutorials',
+            url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_017_SimpleMorphTarget.html',
+          },
+        ],
+      },
+      {
+        name: 'skin',
+        links: [
+          {
+            name: 'glTF-Tutorials',
+            url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_019_SimpleSkin.html',
+          },
+        ],
+      },
     ],
   },
   {

@@ -190,6 +190,14 @@ pub const samples = [_]Sample{
         .name = "camera",
         .root_source_file = "tutorials/camera/main.zig",
     },
+    .{
+        .name = "morphtarget",
+        .root_source_file = "tutorials/morphtarget/main.zig",
+    },
+    .{
+        .name = "skin",
+        .root_source_file = "tutorials/skin/main.zig",
+    },
     //
     .{
         .name = "glb",
