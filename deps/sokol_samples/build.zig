@@ -56,7 +56,7 @@ pub fn build(b: *std.Build) void {
         {
             _ = asset_wf.addCopyFile(
                 test_models.path("Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"),
-                "univrm/AliciaSolid_vrm-0.51.vrm",
+                "UniVRM/AliciaSolid_vrm-0.51.vrm",
             );
         }
     }

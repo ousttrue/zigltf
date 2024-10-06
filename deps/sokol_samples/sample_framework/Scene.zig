@@ -109,7 +109,6 @@ pub fn load(
                 }
             }
             if (primitive.attributes.NORMAL) |normal_accessor_index| {
-                // normal
                 const normals = try gltf_buffer.getAccessorBytes(
                     [3]f32,
                     normal_accessor_index,
@@ -119,7 +118,6 @@ pub fn load(
                 }
             }
             if (primitive.attributes.TEXCOORD_0) |tex0_accessor_index| {
-                // uv
                 const tex0s = try gltf_buffer.getAccessorBytes(
                     [2]f32,
                     tex0_accessor_index,
