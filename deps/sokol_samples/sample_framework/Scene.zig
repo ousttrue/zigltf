@@ -103,8 +103,8 @@ pub fn load(
         try skin_vertices.resize(0);
         try mesh_indices.resize(index_count);
 
-        vertex_count = 0;
-        index_count = 0;
+        var vertex_offset: u32 = 0;
+        var index_offset: u32 = 0;
         for (gltf_mesh.primitives) |primitive| {
             const pos_accessor = gltf.accessors[primitive.attributes.POSITION];
 
@@ -114,7 +114,7 @@ pub fn load(
                     primitive.attributes.POSITION,
                 );
                 for (positions, 0..) |pos, i| {
-                    mesh_vertices.items[vertex_count + i].position = pos;
+                    mesh_vertices.items[vertex_offset + i].position = pos;
                 }
             }
             if (primitive.attributes.NORMAL) |normal_accessor_index| {
@@ -123,7 +123,7 @@ pub fn load(
                     normal_accessor_index,
                 );
                 for (normals, 0..) |normal, i| {
-                    mesh_vertices.items[vertex_count + i].normal = normal;
+                    mesh_vertices.items[vertex_offset + i].normal = normal;
                 }
             }
             if (primitive.attributes.TEXCOORD_0) |tex0_accessor_index| {
@@ -132,13 +132,15 @@ pub fn load(
                     tex0_accessor_index,
                 );
                 for (tex0s, 0..) |tex0, i| {
-                    mesh_vertices.items[vertex_count + i].uv = tex0;
+                    mesh_vertices.items[vertex_offset + i].uv = tex0;
                 }
             }
+
+            // skinning
             if (primitive.attributes.JOINTS_0) |joints0_accessor_index| {
                 if (primitive.attributes.WEIGHTS_0) |weights0_accessor_index| {
-                    if (skin_vertices.items.len != mesh_vertices.items.len) {
-                        try skin_vertices.resize(mesh_vertices.items.len);
+                    if (skin_vertices.items.len != vertex_count) {
+                        try skin_vertices.resize(vertex_count);
                     }
                     const joints = try gltf_buffer.getAccessorBytes(
                         Mesh.UShort4,
@@ -149,7 +151,7 @@ pub fn load(
                         weights0_accessor_index,
                     );
                     for (joints, weights, 0..) |j, w, i| {
-                        skin_vertices.items[vertex_count + i] = .{
+                        skin_vertices.items[vertex_offset + i] = .{
                             .jonts = j,
                             .weights = w,
                         };
@@ -170,12 +172,12 @@ pub fn load(
                             indices_accessor_index,
                         );
                         for (indices, 0..) |index, i| {
-                            mesh_indices.items[index_count + i] = @as(
+                            mesh_indices.items[index_offset + i] = @as(
                                 u16,
                                 @intCast(index),
                             ) + @as(
                                 u16,
-                                @intCast(vertex_count),
+                                @intCast(vertex_offset),
                             );
                         }
                     },
@@ -185,9 +187,9 @@ pub fn load(
                             indices_accessor_index,
                         );
                         for (indices, 0..) |index, i| {
-                            mesh_indices.items[index_count + i] = index + @as(
+                            mesh_indices.items[index_offset + i] = index + @as(
                                 u16,
-                                @intCast(vertex_count),
+                                @intCast(vertex_offset),
                             );
                         }
                     },
@@ -197,13 +199,13 @@ pub fn load(
                             indices_accessor_index,
                         );
                         for (indices, 0..) |index, i| {
-                            mesh_indices.items[index_count + i] = @as(
+                            mesh_indices.items[index_offset + i] = @as(
                                 // TODO
                                 u16,
                                 @intCast(index),
                             ) + @as(
                                 u16,
-                                @intCast(vertex_count),
+                                @intCast(vertex_offset),
                             );
                         }
                     },
@@ -247,12 +249,12 @@ pub fn load(
                     },
                     .color_texture = color_texture,
                 });
-                index_count += index_accessor.count;
+                index_offset += index_accessor.count;
             } else {
                 unreachable;
             }
 
-            vertex_count += pos_accessor.count;
+            vertex_offset += pos_accessor.count;
         }
 
         try meshes.append(Mesh.init(
@@ -338,9 +340,13 @@ pub fn load(
 
     var deforms = std.ArrayList(Deform).init(self.allocator);
     defer deforms.deinit();
+    try deforms.resize(gltf.nodes.len);
+
     var node_matrices = std.ArrayList(Mat4).init(self.allocator);
     defer node_matrices.deinit();
-    for (gltf.nodes) |node| {
+    try node_matrices.resize(gltf.nodes.len);
+
+    for (gltf.nodes, 0..) |node, i| {
         if (node.mesh) |mesh_index| {
             const mesh = &self.meshes[mesh_index];
             // const morph: ?Deform.Morph = null;
@@ -356,7 +362,7 @@ pub fn load(
                     )
                 else blk: {
                     const inversed = try self.allocator.alloc(Mat4, gltf_skin.joints.len);
-                    for (0..inversed.len) |i| inversed[i] = Mat4.identity;
+                    for (0..inversed.len) |j| inversed[j] = Mat4.identity;
                     break :blk inversed;
                 };
 
@@ -371,13 +377,13 @@ pub fn load(
                 skin = Deform.Skin{ .joints = joints };
             }
 
-            try deforms.append(try Deform.init(
+            deforms.items[i] = try Deform.init(
                 self.allocator,
                 mesh,
                 skin,
-            ));
+            );
         }
-        try node_matrices.append(Mat4.identity);
+        node_matrices.items[i] = Mat4.identity;
     }
     self.node_deforms = try deforms.toOwnedSlice();
     self.node_matrices = try node_matrices.toOwnedSlice();
