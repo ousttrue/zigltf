@@ -94,6 +94,9 @@ pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T
         if (accessor.bufferView) |bufferView_index| {
             const bufferViewBytes = try self.getBufferViewBytes(bufferView_index);
             const bufferView = self.gltf.bufferViews[bufferView_index];
+            const begin = accessor.byteOffset;
+            const end = accessor.byteOffset + accessor.count * accessor.stride();
+            const bytes = bufferViewBytes[begin..end];
 
             const same_stride = if (bufferView.byteStride) |stride|
                 stride == accessor.stride()
@@ -101,13 +104,10 @@ pub fn getAccessorBytes(self: *@This(), T: type, accessor_index: u32) ![]const T
                 true;
 
             if (same_stride) {
-                const begin = accessor.byteOffset;
-                const end = accessor.byteOffset + accessor.count * accessor.stride();
-                const bytes = bufferViewBytes[begin..end];
                 return @alignCast(std.mem.bytesAsSlice(T, bytes));
             } else {
                 var buffer = try self.allocator.alloc(T, accessor.count);
-                var p = &bufferViewBytes[0];
+                var p = &bytes[0];
                 const stride = bufferView.byteStride.?;
                 for (0..accessor.count) |vertex_index| {
                     const ptr: *const T = @ptrCast(@alignCast(p));
