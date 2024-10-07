@@ -8,6 +8,7 @@ const Mat4 = rowmath.Mat4;
 const Mesh = @import("Mesh.zig");
 
 pub const Morph = struct {};
+
 pub const Skin = struct {
     pub const Joint = struct {
         node_index: u32,
@@ -36,26 +37,22 @@ pub const Skin = struct {
 pub const Deform = @This();
 
 bind: sg.Bindings = sg.Bindings{},
-deform_vertices: []Mesh.Vertex,
+deform_vertices: []Mesh.Vertex = &.{},
 morph: ?Morph = null,
 skin: ?Skin = null,
 
 pub fn init(
+    self: *@This(),
     allocator: std.mem.Allocator,
     mesh: *const Mesh,
-    skin: ?Skin,
-) !@This() {
-    var deform = Deform{
-        .deform_vertices = try allocator.dupe(Mesh.Vertex, mesh.vertices),
-        .skin = skin,
-    };
-    deform.bind.vertex_buffers[shader.ATTR_vs_aPos] = sg.makeBuffer(.{
+) !void {
+    self.deform_vertices = try allocator.dupe(Mesh.Vertex, mesh.vertices);
+    self.bind.vertex_buffers[shader.ATTR_vs_aPos] = sg.makeBuffer(.{
         .size = @sizeOf(Mesh.Vertex) * mesh.vertices.len,
         .usage = .STREAM,
         .label = "deform-vertices",
     });
-    deform.bind.index_buffer = mesh.bind.index_buffer;
-    return deform;
+    self.bind.index_buffer = mesh.bind.index_buffer;
 }
 
 pub fn update(

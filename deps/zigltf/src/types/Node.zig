@@ -7,10 +7,11 @@ matrix: ?[16]f32 = null,
 translation: ?[3]f32 = null,
 rotation: ?[4]f32 = null,
 scale: ?[3]f32 = null,
-children: []u32 = &.{},
+children: []const u32 = &.{},
 mesh: ?u32 = null,
 skin: ?u32 = null,
 camera: ?u32 = null,
+weights: ?[]const f32 = null,
 
 pub fn format(
     self: @This(),

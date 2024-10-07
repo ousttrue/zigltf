@@ -29,6 +29,10 @@ pub const Submesh = struct {
     color_texture: Texture,
 };
 
+pub const MorphTarget = struct {
+    name: []const u8 = "",
+};
+
 pub const Mesh = @This();
 
 bind: sg.Bindings,
@@ -36,12 +40,14 @@ vertices: []Vertex,
 skin_vertices: ?[]const SkinVertex,
 submeshes: []Submesh,
 vertex_count: u32,
+targets: []MorphTarget,
 
 pub fn init(
     vertices: []Vertex,
     skin_vertices: ?[]const SkinVertex,
     _indices: ?[]u16,
     submeshes: []Submesh,
+    targets: []MorphTarget,
 ) @This() {
     var mesh = Mesh{
         .bind = sg.Bindings{},
@@ -49,6 +55,7 @@ pub fn init(
         .skin_vertices = skin_vertices,
         .submeshes = submeshes,
         .vertex_count = @intCast(vertices.len),
+        .targets = targets,
     };
     mesh.bind.vertex_buffers[shader.ATTR_vs_aPos] = sg.makeBuffer(.{
         .data = sg.asRange(vertices),

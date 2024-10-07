@@ -75,11 +75,19 @@ pub const QuatCurve = struct {
 
 pub const FloatCurve = struct {
     values: TimeValues(f32),
-    pub fn sample(self: @This(), time: f32) []f32 {
-        _ = self;
-        _ = time;
-        unreachable;
-        // return [0]f32{};
+    target_count: u32,
+    pub fn sample(self: @This(), time: f32) []const f32 {
+        switch (self.values.getTimeSection(time)) {
+            .index => |i| {
+                const begin = i * self.target_count;
+                return self.values.output[begin .. begin + self.target_count];
+            },
+            .range => |range| {
+                // todo: learp, slserp... etc
+                const begin = range.begin * self.target_count;
+                return self.values.output[begin .. begin + self.target_count];
+            },
+        }
     }
 };
 

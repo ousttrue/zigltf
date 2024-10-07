@@ -71,17 +71,18 @@ pub fn load(
     self.gltf = json;
     const gltf = json.value;
 
-    var meshes = std.ArrayList(Mesh).init(self.allocator);
-    defer meshes.deinit();
+    self.meshes = try self.allocator.alloc(Mesh, gltf.meshes.len);
+
     var submeshes = std.ArrayList(Mesh.Submesh).init(self.allocator);
     defer submeshes.deinit();
-
     var mesh_vertices = std.ArrayList(Mesh.Vertex).init(self.allocator);
     defer mesh_vertices.deinit();
     var skin_vertices = std.ArrayList(Mesh.SkinVertex).init(self.allocator);
     defer skin_vertices.deinit();
     var mesh_indices = std.ArrayList(u16).init(self.allocator);
     defer mesh_indices.deinit();
+    var targets = std.ArrayList(Mesh.MorphTarget).init(self.allocator);
+    defer targets.deinit();
 
     var gltf_buffer = zigltf.GltfBuffer.init(
         self.allocator,
@@ -90,7 +91,10 @@ pub fn load(
     );
     defer gltf_buffer.deinit();
 
-    for (gltf.meshes) |gltf_mesh| {
+    self.node_deforms = try self.allocator.alloc(Deform, gltf.nodes.len);
+    self.node_matrices = try self.allocator.alloc(Mat4, gltf.nodes.len);
+
+    for (gltf.meshes, 0..) |gltf_mesh, mesh_index| {
         var vertex_count: u32 = 0;
         var index_count: u32 = 0;
         for (gltf_mesh.primitives) |primitive| {
@@ -257,102 +261,27 @@ pub fn load(
             vertex_offset += pos_accessor.count;
         }
 
-        try meshes.append(Mesh.init(
+        self.meshes[mesh_index] = Mesh.init(
             try mesh_vertices.toOwnedSlice(),
             if (skin_vertices.items.len > 0) try skin_vertices.toOwnedSlice() else null,
             mesh_indices.items,
             try submeshes.toOwnedSlice(),
-        ));
+            try targets.toOwnedSlice(),
+        );
     }
-    self.meshes = try meshes.toOwnedSlice();
-
-    if (gltf.animations.len > 0) {
-        var animations = std.ArrayList(Animation).init(self.allocator);
-
-        for (gltf.animations) |gltf_animation| {
-            var curves = std.ArrayList(Animation.Curve).init(self.allocator);
-            var duration: f32 = 0;
-
-            for (gltf_animation.channels) |channel| {
-                const sampler = gltf_animation.samplers[channel.sampler];
-                if (std.mem.eql(u8, channel.target.path, "translation")) {
-                    const curve = Animation.Vec3Curve{
-                        .values = .{
-                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
-                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
-                        },
-                    };
-                    duration = @max(duration, curve.values.duration());
-                    try curves.append(.{
-                        .node_index = channel.target.node,
-                        .target = .{ .translation = curve },
-                    });
-                } else if (std.mem.eql(u8, channel.target.path, "rotation")) {
-                    const curve = Animation.QuatCurve{
-                        .values = .{
-                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
-                            .output = try gltf_buffer.getAccessorBytes(Quat, sampler.output),
-                        },
-                    };
-                    duration = @max(duration, curve.values.duration());
-                    try curves.append(.{
-                        .node_index = channel.target.node,
-                        .target = .{ .rotation = curve },
-                    });
-                } else if (std.mem.eql(u8, channel.target.path, "scale")) {
-                    const curve = Animation.Vec3Curve{
-                        .values = .{
-                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
-                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
-                        },
-                    };
-                    duration = @max(duration, curve.values.duration());
-                    try curves.append(.{
-                        .node_index = channel.target.node,
-                        .target = .{ .scale = curve },
-                    });
-                } else if (std.mem.eql(u8, channel.target.path, "weights")) {
-                    const curve = Animation.FloatCurve{
-                        .values = .{
-                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
-                            .output = try gltf_buffer.getAccessorBytes(f32, sampler.output),
-                        },
-                    };
-                    duration = @max(duration, curve.values.duration());
-                    try curves.append(.{
-                        .node_index = channel.target.node,
-                        .target = .{ .weights = curve },
-                    });
-                } else {
-                    unreachable;
-                }
-            }
-
-            try animations.append(.{
-                .duration = duration,
-                .curves = try curves.toOwnedSlice(),
-            });
-        }
-
-        self.animations = try animations.toOwnedSlice();
-        self.current_animation = 0;
-    }
-
-    var deforms = std.ArrayList(Deform).init(self.allocator);
-    defer deforms.deinit();
-    try deforms.resize(gltf.nodes.len);
-
-    var node_matrices = std.ArrayList(Mat4).init(self.allocator);
-    defer node_matrices.deinit();
-    try node_matrices.resize(gltf.nodes.len);
 
     for (gltf.nodes, 0..) |node, i| {
+        self.node_matrices[i] = Mat4.identity;
+        self.node_deforms[i] = .{};
         if (node.mesh) |mesh_index| {
+            const deform = &self.node_deforms[i];
             const mesh = &self.meshes[mesh_index];
+            if (mesh.targets.len > 0) {
+                deform.morph = .{};
+            }
             // const morph: ?Deform.Morph = null;
             // if (node.weights) |weights| {}
 
-            var skin: ?Deform.Skin = null;
             if (node.skin) |skin_index| {
                 const gltf_skin = gltf.skins[skin_index];
                 const inversed = if (gltf_skin.inverseBindMatrices) |inversed_index|
@@ -374,19 +303,102 @@ pub fn load(
                     };
                 }
 
-                skin = Deform.Skin{ .joints = joints };
+                deform.skin = Deform.Skin{ .joints = joints };
             }
 
-            deforms.items[i] = try Deform.init(
-                self.allocator,
-                mesh,
-                skin,
-            );
+            if (deform.skin != null or deform.morph != null) {
+                try deform.init(
+                    self.allocator,
+                    mesh,
+                );
+            }
         }
-        node_matrices.items[i] = Mat4.identity;
     }
-    self.node_deforms = try deforms.toOwnedSlice();
-    self.node_matrices = try node_matrices.toOwnedSlice();
+
+    if (gltf.animations.len > 0) {
+        var animations = std.ArrayList(Animation).init(self.allocator);
+
+        for (gltf.animations) |gltf_animation| {
+            var curves = std.ArrayList(Animation.Curve).init(self.allocator);
+            var duration: f32 = 0;
+
+            for (gltf_animation.channels) |channel| {
+                const sampler = gltf_animation.samplers[channel.sampler];
+                const node_index = channel.target.node;
+                if (std.mem.eql(u8, channel.target.path, "translation")) {
+                    const curve = Animation.Vec3Curve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = node_index,
+                        .target = .{ .translation = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "rotation")) {
+                    const curve = Animation.QuatCurve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Quat, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = node_index,
+                        .target = .{ .rotation = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "scale")) {
+                    const curve = Animation.Vec3Curve{
+                        .values = .{
+                            .input = try gltf_buffer.getAccessorBytes(f32, sampler.input),
+                            .output = try gltf_buffer.getAccessorBytes(Vec3, sampler.output),
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = node_index,
+                        .target = .{ .scale = curve },
+                    });
+                } else if (std.mem.eql(u8, channel.target.path, "weights")) {
+                    const node = gltf.nodes[node_index];
+                    const mesh_index = node.mesh orelse {
+                        @panic("no mesh");
+                    };
+                    const input = try gltf_buffer.getAccessorBytes(f32, sampler.input);
+                    const output = try gltf_buffer.getAccessorBytes(f32, sampler.output);
+                    const target_count = self.meshes[mesh_index].targets.len;
+                    if (target_count * input.len != output.len) {
+                        @panic("target_count * input.len != output.len");
+                    }
+                    const curve = Animation.FloatCurve{
+                        .target_count = @intCast(target_count),
+                        .values = .{
+                            .input = input,
+                            .output = output,
+                        },
+                    };
+                    duration = @max(duration, curve.values.duration());
+                    try curves.append(.{
+                        .node_index = node_index,
+                        .target = .{ .weights = curve },
+                    });
+                } else {
+                    unreachable;
+                }
+            }
+
+            try animations.append(.{
+                .duration = duration,
+                .curves = try curves.toOwnedSlice(),
+            });
+        }
+
+        self.animations = try animations.toOwnedSlice();
+        self.current_animation = 0;
+    }
+
     _ = self.update(0);
 }
 
@@ -471,8 +483,8 @@ pub fn update(self: *@This(), time: f32) ?f32 {
                         unreachable;
                     },
                     .weights => |values| {
-                        _ = values;
-                        unreachable;
+                        const w = values.sample(looptime);
+                        gltf.value.nodes[curve.node_index].weights = w;
                     },
                 }
             }
