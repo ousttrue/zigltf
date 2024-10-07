@@ -30,6 +30,7 @@ scenes: []Scene = &.{},
 scene: u32 = 0,
 animations: []Animation = &.{},
 cameras: []Camera = &.{},
+extensionsUsed: [][]const u8 = &.{},
 
 fn print_list(writer: anytype, name: []const u8, list: anytype) !void {
     if (list.len > 0) {
@@ -52,6 +53,15 @@ pub fn format(
     try writer.print("{{\n", .{});
 
     try writer.print("asset: {any}\n", .{self.asset});
+    if (self.extensionsUsed.len > 0) {
+        for (self.extensionsUsed, 0..) |extension, i| {
+            if (i > 0) {
+                try writer.print(", ", .{});
+            }
+            try writer.print("{s}", .{extension});
+        }
+        try writer.print("\n", .{});
+    }
 
     try print_list(writer, "buffers", self.buffers);
     try print_list(writer, "bufferViews", self.bufferViews);

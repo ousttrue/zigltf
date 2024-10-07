@@ -241,7 +241,7 @@ fn load_mesh(
                 if (material.pbrMetallicRoughness) |pbr| {
                     if (pbr.baseColorTexture) |base| {
                         const texture = gltf.textures[base.index];
-                        if (texture.source) |source| {
+                        if (getSourceOrKtx(texture)) |source| {
                             const image_bytes = try gltf_buffer.getImageBytes(source);
                             const sampler = if (texture.sampler) |sampler_index| gltf.samplers[sampler_index] else null;
                             if (Image.init(image_bytes)) |image| {
@@ -346,6 +346,15 @@ fn load_mesh(
             }
         }
     }
+}
+
+fn getSourceOrKtx(texture: zigltf.Texture) ?u32 {
+    if (texture.extensions) |extensions| {
+        if (extensions.KHR_texture_basisu) |basisu| {
+            return basisu.source;
+        }
+    }
+    return texture.source;
 }
 
 fn load_animation(

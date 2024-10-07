@@ -18,10 +18,10 @@ pub fn format(
     try format_helper.string_value(writer, self.name, .{});
     try writer.print("{{\n", .{});
     if (self.uri) |uri| {
-        try writer.print("  => {s}\n", .{uri});
+        try writer.print("  uri: {s}\n", .{uri});
     } else if (self.bufferView) |bufferView| {
         if (self.mimeType) |mimeType| {
-            try writer.print("  {s} => #{}\n", .{ mimeType, bufferView });
+            try writer.print("  [{s}] #{}\n", .{ mimeType, bufferView });
         } else {
             try writer.print("  [no mime]? => #{}\n", .{bufferView});
         }
