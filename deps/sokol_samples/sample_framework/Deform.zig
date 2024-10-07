@@ -57,15 +57,23 @@ pub fn init(
 
 pub fn update(
     self: *@This(),
-    base_vertices: []const Mesh.Vertex,
-    skinning_vertices: ?[]const Mesh.SkinVertex,
+    mesh: *const Mesh,
     node_matrices: []const Mat4,
+    _weights: ?[]const f32,
 ) void {
-    std.mem.copyForwards(Mesh.Vertex, self.deform_vertices, base_vertices);
+    std.mem.copyForwards(Mesh.Vertex, self.deform_vertices, mesh.vertices);
+
+    if (_weights) |weights| {
+        for (mesh.targets, weights) |t, w| {
+            for (self.deform_vertices, t.positions) |*v, pos| {
+                v.position = v.position.add(pos.scale(w));
+            }
+        }
+    }
 
     if (self.skin) |skin| {
         for (self.deform_vertices, 0..) |*v, i| {
-            const joints_weigts = skinning_vertices.?[i];
+            const joints_weigts = mesh.skin_vertices.?[i];
             var m = Mat4.zero;
             if (skin.skinning(joints_weigts.weights.x, joints_weigts.jonts.x, node_matrices)) |skinning_matrix| {
                 m = m.add(skinning_matrix);

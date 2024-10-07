@@ -305,8 +305,6 @@ pub fn load(
             if (mesh.targets.len > 0) {
                 deform.morph = .{};
             }
-            // const morph: ?Deform.Morph = null;
-            // if (node.weights) |weights| {}
 
             if (node.skin) |skin_index| {
                 const gltf_skin = gltf.skins[skin_index];
@@ -529,13 +527,13 @@ pub fn update(self: *@This(), time: f32) ?f32 {
     // update mesh deform
     for (gltf.value.nodes, 0..) |node, node_index| {
         if (node.mesh) |mesh_index| {
-            const base_mesh = self.meshes[mesh_index];
+            const base_mesh = &self.meshes[mesh_index];
             const deform = &self.node_deforms[node_index];
             if (deform.skin != null or deform.morph != null) {
                 deform.update(
-                    base_mesh.vertices,
-                    base_mesh.skin_vertices,
+                    base_mesh,
                     self.node_matrices,
+                    node.weights,
                 );
             }
         }
