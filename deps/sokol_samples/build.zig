@@ -213,6 +213,10 @@ pub const samples = [_]Sample{
         .root_source_file = "extensions/draco/main.zig",
     },
     .{
+        .name = "basisu",
+        .root_source_file = "extensions/basisu/main.zig",
+    },
+    .{
         .name = "vrm0",
         .root_source_file = "extensions/vrm0/main.zig",
     },
