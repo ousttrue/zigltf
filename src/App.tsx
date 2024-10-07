@@ -13,7 +13,7 @@ function Item(props: ItemType) {
       </figure>
     </a>
 
-    <ul>
+    <ul className="small">
       {props.links.map((link, i) => (
         <li key={i}>
           <a href={link.url} target="_blank">

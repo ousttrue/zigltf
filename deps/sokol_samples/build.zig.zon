@@ -25,8 +25,8 @@
             .hash = "1220f1379331d08475352530d763a9cd249e6851e6d699a6bebafea8c2e6b925ea73",
         },
         .@"gltf-test-models" = .{
-            .url = "git+https://github.com/ousttrue/gltf-test-models.git#55328b2d063141993373ab8c770c72d7cfda260f",
-            .hash = "1220aa78e130eb4c584dc21b408dcd26e8cfd30043e0f673ba6d229a0bfff592c54e",
+            .url = "git+https://github.com/ousttrue/gltf-test-models.git#d31c7c3d3c24554304ac43c902def569afd2b3c0",
+            .hash = "1220c97b53dc756f91e68315c364e9ab94cc9c6dbeaf3642e577872f0de08d3684bb",
         },
         .stb = .{
             .url = "git+https://github.com/nothings/stb.git#f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31",

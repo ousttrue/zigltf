@@ -21,7 +21,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'minimal',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-003',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_003_MinimalGltfFile.html',
           },
         ],
@@ -30,7 +30,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'sparse',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-005',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_005_BuffersBufferViewsAccessors.html',
           },
         ],
@@ -39,7 +39,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'animation',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-006',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_006_SimpleAnimation.html',
           },
         ],
@@ -48,7 +48,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'simple_meshes',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-008',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_008_SimpleMeshes.html',
           },
         ],
@@ -57,7 +57,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'simple_material',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-011',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_011_SimpleMaterial.html',
           },
         ],
@@ -66,7 +66,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'simple_texture',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-013',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_013_SimpleTexture.html',
           },
         ],
@@ -75,7 +75,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'morphtarget',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-017',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_017_SimpleMorphTarget.html',
           },
         ],
@@ -84,7 +84,7 @@ export const GROUPS: ItemGroupType[] = [
         name: 'skin',
         links: [
           {
-            name: 'glTF-Tutorials',
+            name: 'Tutorial-019',
             url: 'https://github.khronos.org/glTF-Tutorials/gltfTutorial/gltfTutorial_019_SimpleSkin.html',
           },
         ],
@@ -117,8 +117,35 @@ export const GROUPS: ItemGroupType[] = [
         name: 'draco',
         links: [
           {
-            name: 'github',
+            name: 'KHR_draco_mesh_compression',
             url: 'https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md',
+          },
+        ],
+      },
+      {
+        name: 'basisu',
+        links: [
+          {
+            name: 'KHR_texture_basisu',
+            url: 'https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_basisu/README.md',
+          },
+        ],
+      },
+      {
+        name: 'unlit',
+        links: [
+          {
+            name: 'KHR_materials_unlit',
+            url: 'https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_unlit',
+          },
+        ],
+      },
+      {
+        name: 'emission',
+        links: [
+          {
+            name: 'KHR_materials_emissive_strength',
+            url: 'https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_emissive_strength',
           },
         ],
       },
@@ -130,6 +157,15 @@ export const GROUPS: ItemGroupType[] = [
             url: 'https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/README.ja.md',
           },
         ],
+      },
+      {
+        name: 'vrm1',
+        links: [
+          {
+            name: 'VRMC_vrm',
+            url: 'https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0',
+          },
+        ]
       },
     ],
   },

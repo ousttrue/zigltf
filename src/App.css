@@ -43,3 +43,7 @@ li {
   justify-content: center;
   align-items: center;
 }
+
+.small {
+  font-size: small;
+}

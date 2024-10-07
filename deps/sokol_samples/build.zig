@@ -46,19 +46,19 @@ pub fn build(b: *std.Build) void {
     }
     {
         const test_models = b.dependency("gltf-test-models", .{});
-        {
-            const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
-            _ = asset_wf.addCopyDirectory(wf.getDirectory(), "glTF-Sample-Assets", .{});
-        }
+        const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
+        _ = asset_wf.addCopyDirectory(wf.getDirectory(), "glTF-Sample-Assets", .{});
     }
     {
         const test_models = b.dependency("univrm", .{});
-        {
-            _ = asset_wf.addCopyFile(
-                test_models.path("Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"),
-                "UniVRM/AliciaSolid_vrm-0.51.vrm",
-            );
-        }
+        _ = asset_wf.addCopyFile(
+            test_models.path("Tests/Models/Alicia_vrm-0.51/AliciaSolid_vrm-0.51.vrm"),
+            "UniVRM/AliciaSolid_vrm-0.51.vrm",
+        );
+    }
+    {
+        const test_models = b.dependency("vrm", .{});
+        _ = asset_wf.addCopyDirectory(test_models.path("samples"), "VRMC_vrm", .{});
     }
 
     // sample_framework
@@ -207,12 +207,17 @@ pub const samples = [_]Sample{
         .name = "gltf",
         .root_source_file = "gltf/main.zig",
     },
+    // extensions
     .{
         .name = "draco",
-        .root_source_file = "draco/main.zig",
+        .root_source_file = "extensions/draco/main.zig",
     },
     .{
         .name = "vrm0",
-        .root_source_file = "vrm0/main.zig",
+        .root_source_file = "extensions/vrm0/main.zig",
+    },
+    .{
+        .name = "vrm1",
+        .root_source_file = "extensions/vrm1/main.zig",
     },
 };
