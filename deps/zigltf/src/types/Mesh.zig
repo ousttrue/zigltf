@@ -31,6 +31,12 @@ const Attributes = struct {
     }
 };
 
+const Target = struct {
+    POSITION: u32,
+    NORMAL: ?u32 = null,
+    TANGENT: ?u32 = null,
+};
+
 pub const Primitive = struct {
     pub const Mode = enum(u32) {
         POINTS = 0,
@@ -46,6 +52,7 @@ pub const Primitive = struct {
     material: ?u32 = null,
     indices: ?u32 = null,
     mode: ?Mode = null,
+    targets: []Target = &.{},
 };
 
 name: ?[]const u8 = null,
@@ -68,6 +75,9 @@ pub fn format(
         try writer.print("    #{}:{{", .{i});
         if (primitive.material) |material| {
             try writer.print(" => material#{}", .{material});
+        }
+        if(primitive.targets.len>0){
+            try writer.print(" + {} morph", .{primitive.targets.len});
         }
         try writer.print("\n", .{});
         try writer.print("      {any}\n", .{primitive.attributes});

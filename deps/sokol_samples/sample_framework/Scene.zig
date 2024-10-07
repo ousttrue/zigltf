@@ -109,6 +109,7 @@ pub fn load(
 
         var vertex_offset: u32 = 0;
         var index_offset: u32 = 0;
+        var target_count: ?u32 = null;
         for (gltf_mesh.primitives) |primitive| {
             const pos_accessor = gltf.accessors[primitive.attributes.POSITION];
 
@@ -256,6 +257,31 @@ pub fn load(
                 index_offset += index_accessor.count;
             } else {
                 unreachable;
+            }
+
+            if (primitive.targets.len > 0) {
+                if (target_count) |count| {
+                    if (primitive.targets.len != count) {
+                        @panic("primitive has diffrent targets");
+                    }
+                } else {
+                    target_count = @intCast(primitive.targets.len);
+                    for (0..primitive.targets.len) |_| {
+                        try targets.append(.{
+                            .positions = try self.allocator.alloc(Vec3, vertex_count),
+                        });
+                    }
+                }
+
+                for (primitive.targets, targets.items) |gltf_target, *target| {
+                    const positions = try gltf_buffer.getAccessorBytes(
+                        Vec3,
+                        gltf_target.POSITION,
+                    );
+                    for (positions, 0..) |pos, i| {
+                        target.positions[vertex_offset + i] = pos;
+                    }
+                }
             }
 
             vertex_offset += pos_accessor.count;

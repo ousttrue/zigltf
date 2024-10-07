@@ -31,6 +31,7 @@ pub const Submesh = struct {
 
 pub const MorphTarget = struct {
     name: []const u8 = "",
+    positions: []Vec3,
 };
 
 pub const Mesh = @This();
