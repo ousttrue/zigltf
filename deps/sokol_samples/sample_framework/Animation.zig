@@ -51,8 +51,13 @@ pub const Vec3Curve = struct {
                 return self.values.output[i];
             },
             .range => |range| {
-                // todo: learp, slserp... etc
-                return self.values.output[range.begin];
+                const begin = self.values.output[range.begin];
+                const end = self.values.output[range.begin + 1];
+                return .{
+                    .x = std.math.lerp(begin.x, end.x, range.factor),
+                    .y = std.math.lerp(begin.y, end.y, range.factor),
+                    .z = std.math.lerp(begin.z, end.z, range.factor),
+                };
             },
         }
     }
@@ -66,8 +71,9 @@ pub const QuatCurve = struct {
                 return self.values.output[i];
             },
             .range => |range| {
-                // todo: learp, slserp... etc
-                return self.values.output[range.begin];
+                const begin = self.values.output[range.begin];
+                const end = self.values.output[range.begin + 1];
+                return Quat.slerp(begin, end, range.factor);
             },
         }
     }
@@ -76,6 +82,7 @@ pub const QuatCurve = struct {
 pub const FloatCurve = struct {
     values: TimeValues(f32),
     target_count: u32,
+    buffer: []f32,
     pub fn sample(self: @This(), time: f32) []const f32 {
         switch (self.values.getTimeSection(time)) {
             .index => |i| {
@@ -83,9 +90,14 @@ pub const FloatCurve = struct {
                 return self.values.output[begin .. begin + self.target_count];
             },
             .range => |range| {
-                // todo: learp, slserp... etc
-                const begin = range.begin * self.target_count;
-                return self.values.output[begin .. begin + self.target_count];
+                const begin_start = range.begin * self.target_count;
+                const end_start = begin_start + self.target_count;
+                const begin = self.values.output[begin_start..end_start];
+                const end = self.values.output[end_start .. end_start + self.target_count];
+                for (begin, end, 0..) |b, e, i| {
+                    self.buffer[i] = std.math.lerp(b, e, range.factor);
+                }
+                return self.buffer;
             },
         }
     }

@@ -416,6 +416,7 @@ fn load_animation(
                             .input = input,
                             .output = output,
                         },
+                        .buffer = try self.allocator.alloc(f32, target_count),
                     };
                     duration = @max(duration, curve.values.duration());
                     try curves.append(.{
