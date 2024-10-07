@@ -69,8 +69,23 @@ pub fn load(
 ) !void {
     std.debug.print("{s}\n", .{json.value});
     self.gltf = json;
-    const gltf = json.value;
 
+    var gltf_buffer = zigltf.GltfBuffer.init(
+        self.allocator,
+        json.value,
+        binmap orelse std.StringHashMap([]const u8).init(self.allocator),
+    );
+    defer gltf_buffer.deinit();
+
+    try self.load_mesh(json.value, &gltf_buffer);
+    try self.load_animation(json.value, &gltf_buffer);
+}
+
+fn load_mesh(
+    self: *@This(),
+    gltf: zigltf.Gltf,
+    gltf_buffer: *zigltf.GltfBuffer,
+) !void {
     self.meshes = try self.allocator.alloc(Mesh, gltf.meshes.len);
 
     var submeshes = std.ArrayList(Mesh.Submesh).init(self.allocator);
@@ -83,13 +98,6 @@ pub fn load(
     defer mesh_indices.deinit();
     var targets = std.ArrayList(Mesh.MorphTarget).init(self.allocator);
     defer targets.deinit();
-
-    var gltf_buffer = zigltf.GltfBuffer.init(
-        self.allocator,
-        gltf,
-        binmap orelse std.StringHashMap([]const u8).init(self.allocator),
-    );
-    defer gltf_buffer.deinit();
 
     self.node_deforms = try self.allocator.alloc(Deform, gltf.nodes.len);
     self.node_matrices = try self.allocator.alloc(Mat4, gltf.nodes.len);
@@ -338,7 +346,13 @@ pub fn load(
             }
         }
     }
+}
 
+fn load_animation(
+    self: *@This(),
+    gltf: zigltf.Gltf,
+    gltf_buffer: *zigltf.GltfBuffer,
+) !void {
     if (gltf.animations.len > 0) {
         var animations = std.ArrayList(Animation).init(self.allocator);
 
@@ -477,6 +491,7 @@ pub fn update(self: *@This(), time: f32) ?f32 {
         return null;
     };
 
+    // update animation
     var _looptime: ?f32 = null;
     if (self.current_animation) |current| {
         if (current < self.animations.len) {

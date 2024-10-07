@@ -58,7 +58,7 @@ pub fn init(
         .vertex_count = @intCast(vertices.len),
         .targets = targets,
     };
-    mesh.bind.vertex_buffers[shader.ATTR_vs_aPos] = sg.makeBuffer(.{
+    mesh.bind.vertex_buffers[0] = sg.makeBuffer(.{
         .data = sg.asRange(vertices),
         .label = "base-vertices",
     });

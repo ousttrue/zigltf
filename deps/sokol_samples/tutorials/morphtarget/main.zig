@@ -8,7 +8,7 @@ const rowmath = @import("rowmath");
 const framework = @import("framework");
 const Scene = framework.Scene;
 
-const minimal_gltf =
+const gltf_json =
     \\{
     \\  "scene": 0,
     \\  "scenes":[
@@ -239,7 +239,7 @@ export fn init() void {
     const parsed = std.json.parseFromSlice(
         zigltf.Gltf,
         allocator,
-        minimal_gltf,
+        gltf_json,
         .{
             .ignore_unknown_fields = true,
         },

@@ -1,7 +1,6 @@
 const std = @import("std");
 const sokol = @import("sokol");
 const sg = sokol.gfx;
-const shader = @import("gltf.glsl.zig");
 const rowmath = @import("rowmath");
 const Vec3 = rowmath.Vec3;
 const Mat4 = rowmath.Mat4;
@@ -47,7 +46,7 @@ pub fn init(
     mesh: *const Mesh,
 ) !void {
     self.deform_vertices = try allocator.dupe(Mesh.Vertex, mesh.vertices);
-    self.bind.vertex_buffers[shader.ATTR_vs_aPos] = sg.makeBuffer(.{
+    self.bind.vertex_buffers[0] = sg.makeBuffer(.{
         .size = @sizeOf(Mesh.Vertex) * mesh.vertices.len,
         .usage = .STREAM,
         .label = "deform-vertices",
