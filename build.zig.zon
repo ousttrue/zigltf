@@ -8,6 +8,10 @@
         .sokol_samples = .{
             .path = "deps/sokol_samples",
         },
+        .@"emsdk-zig" = .{
+            .url = "git+https://github.com/ousttrue/emsdk-zig.git#149035fc555ba520b07f40fbad6a884ad09494a2",
+            .hash = "12209748efd123d7b0ec8c49abe27144f935685e4df2f049ae7877ef29e169402742",
+        },
     },
     .paths = .{
         "build.zig",

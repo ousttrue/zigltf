@@ -123,7 +123,7 @@ pub fn build(b: *std.Build) void {
         compiled.root_module.addImport("sokol", sokol_dep.module("sokol"));
         compiled.root_module.addImport("rowmath", rowmath_dep.module("rowmath"));
         compiled.root_module.addImport("zigltf", zigltf_dep.module("zigltf"));
-        compiled.root_module.addImport("framework", &sample_framework.root_module);
+        compiled.root_module.addImport("framework", sample_framework.root_module);
         compiled.step.dependOn(&sample_framework.step);
 
         if (target.result.isWasm()) {
