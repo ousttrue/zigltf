@@ -16,8 +16,8 @@
             .hash = "122007ff9e979a63058e3af1de1d8b98957baa741a8b779d50f9b251dca4acf60b41",
         },
         .@"emsdk-zig" = .{
-            .url = "git+https://github.com/ousttrue/emsdk-zig.git#149035fc555ba520b07f40fbad6a884ad09494a2",
-            .hash = "12209748efd123d7b0ec8c49abe27144f935685e4df2f049ae7877ef29e169402742",
+            .url = "git+https://github.com/ousttrue/emsdk-zig.git#9b937b26b79c42fae3a6a8d9c156f02ca612480d",
+            .hash = "1220ae63c6f473c034d9ba811e85fe918f85ae3020f33d2ee6b067c05954c72e7aec",
         },
         // camera etc
         .rowmath = .{
