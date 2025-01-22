@@ -1,5 +1,5 @@
 @vs vs
-uniform vs_params {
+layout(binding=0) uniform vs_params {
     mat4 projection_view;
     mat4 model;
 };
@@ -21,17 +21,17 @@ void main() {
 @end
 
 @fs fs
-uniform fs_params {
+layout(binding=1) uniform fs_params {
     vec3 lightPos;  
     vec3 lightColor;
     vec3 ambient;
 };
-uniform submesh_params {
+layout(binding=2) uniform submesh_params {
     vec4 material_rgba;
 };
 
-uniform texture2D colorTexture2D;
-uniform sampler colorTextureSmp;
+layout(binding=0) uniform texture2D colorTexture2D;
+layout(binding=0) uniform sampler colorTextureSmp;
 #define colorTexture sampler2D(colorTexture2D, colorTextureSmp)
 
 in vec3 FragPos;

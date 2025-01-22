@@ -12,18 +12,18 @@
         },
         // glsl => glsl.zig
         .@"sokol-tools-bin" = .{
-            .url = "git+https://github.com/floooh/sokol-tools-bin.git#8cc8c257380c9a5e230a84aeebf09cd500903fbc",
-            .hash = "12200f5129c997728160ab584adcc939b9dbca6f802d7273f386dad777de85e80421",
+            .url = "git+https://github.com/floooh/sokol-tools-bin.git#c37e6630a1a55141d813eae2bf17b6ef93e9867c",
+            .hash = "122007ff9e979a63058e3af1de1d8b98957baa741a8b779d50f9b251dca4acf60b41",
         },
         .@"emsdk-zig" = .{
             .url = "git+https://github.com/ousttrue/emsdk-zig.git#149035fc555ba520b07f40fbad6a884ad09494a2",
             .hash = "12209748efd123d7b0ec8c49abe27144f935685e4df2f049ae7877ef29e169402742",
         },
         // camera etc
-        // .rowmath = .{
-        //     .url = "git+https://github.com/ousttrue/rowmath.git#5ec6007ce7969d31000b89280c16a997fed6c6bd",
-        //     .hash = "1220f1379331d08475352530d763a9cd249e6851e6d699a6bebafea8c2e6b925ea73",
-        // },
+        .rowmath = .{
+            .url = "git+https://github.com/ousttrue/rowmath.git#4a9ea889f1961c283d77e66705d4fd1f616230a3",
+            .hash = "122061be42760ffe158ae726debf462aff5e6d2fde7625a4b5da760982c640157419",
+        },
         .@"gltf-test-models" = .{
             .url = "git+https://github.com/ousttrue/gltf-test-models.git#d31c7c3d3c24554304ac43c902def569afd2b3c0",
             .hash = "1220c97b53dc756f91e68315c364e9ab94cc9c6dbeaf3642e577872f0de08d3684bb",

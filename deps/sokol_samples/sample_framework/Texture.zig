@@ -4,15 +4,16 @@ const shader = @import("gltf.glsl.zig");
 const Image = @import("Image.zig");
 
 pub const Texture = @This();
-fs: sg.StageBindings = sg.StageBindings{},
+fs_images: [16]sg.Image = [_]sg.Image{.{}} ** 16,
+fs_samplers: [16]sg.Sampler = [_]sg.Sampler{.{}} ** 16,
 
 pub fn init(image: Image, _sampler: ?sg.SamplerDesc) @This() {
     // init sokol
     var texture = Texture{};
-    texture.fs.images[shader.SLOT_colorTexture2D] = sg.allocImage();
-    texture.fs.samplers[shader.SLOT_colorTextureSmp] = sg.allocSampler();
+    texture.fs_images[shader.IMG_colorTexture2D] = sg.allocImage();
+    texture.fs_samplers[shader.SMP_colorTextureSmp] = sg.allocSampler();
     sg.initSampler(
-        texture.fs.samplers[shader.SLOT_colorTextureSmp],
+        texture.fs_samplers[shader.SMP_colorTextureSmp],
         if (_sampler) |sampler|
             sampler
         else
@@ -36,7 +37,7 @@ pub fn init(image: Image, _sampler: ?sg.SamplerDesc) @This() {
         .ptr = &image.pixels[0],
         .size = image.byteLength(),
     };
-    sg.initImage(texture.fs.images[shader.SLOT_colorTexture2D], img_desc);
+    sg.initImage(texture.fs_images[shader.IMG_colorTexture2D], img_desc);
 
     return texture;
 }

@@ -50,9 +50,9 @@ pub fn init(self: *@This(), allocator: std.mem.Allocator) void {
     };
     // test to provide buffer stride, but no attr offsets
     // pip_desc.layout.buffers[0].stride = 28;
-    pip_desc.layout.attrs[shader.ATTR_vs_aPos].format = .FLOAT3;
-    pip_desc.layout.attrs[shader.ATTR_vs_aNormal].format = .FLOAT3;
-    pip_desc.layout.attrs[shader.ATTR_vs_aTexCoord].format = .FLOAT2;
+    pip_desc.layout.attrs[shader.ATTR_gltf_aPos].format = .FLOAT3;
+    pip_desc.layout.attrs[shader.ATTR_gltf_aNormal].format = .FLOAT3;
+    pip_desc.layout.attrs[shader.ATTR_gltf_aTexCoord].format = .FLOAT2;
     self.pip = sg.makePipeline(pip_desc);
 
     self.white_texture = Texture.init(Image.white, null);
@@ -602,7 +602,7 @@ fn update_node_matrix(
                 .z = scale[2],
             };
         }
-        break :block Mat4.fromTrs(.{ .t = t, .r = r, .s = s });
+        break :block Mat4.makeTrs(.{ .t = t, .r = r, .s = s });
     };
     const model_matrix = local_matrix.mul(parent_matrix);
     self.node_matrices[node_index] = model_matrix;
@@ -664,24 +664,24 @@ fn draw_mesh(
         .projection_view = vp.m,
         .model = model.m,
     };
-    sg.applyUniforms(.VS, shader.SLOT_vs_params, sg.asRange(&vs_params));
+    sg.applyUniforms(shader.UB_vs_params, sg.asRange(&vs_params));
 
     const fs_params = shader.FsParams{
         .lightPos = light_pos,
         .lightColor = light_color,
         .ambient = ambient,
     };
-    sg.applyUniforms(.FS, shader.SLOT_fs_params, sg.asRange(&fs_params));
+    sg.applyUniforms(shader.UB_fs_params, sg.asRange(&fs_params));
 
     var offset: u32 = 0;
     for (base_mesh.submeshes) |*submesh| {
         sg.applyUniforms(
-            .FS,
-            shader.SLOT_submesh_params,
+            shader.UB_submesh_params,
             sg.asRange(&submesh.submesh_params),
         );
 
-        bind.fs = submesh.color_texture.fs;
+        bind.images = submesh.color_texture.fs_images;
+        bind.samplers = submesh.color_texture.fs_samplers;
         sg.applyBindings(bind.*);
 
         sg.draw(offset, submesh.draw_count, 1);
