@@ -1,3 +1,3 @@
-pub usingnamespace @import("types/types.zig");
-pub usingnamespace @import("GltfBuffer.zig");
-pub usingnamespace @import("Glb.zig");
+pub const types = @import("types/types.zig");
+pub const GltfBuffer = @import("GltfBuffer.zig");
+pub const Glb = @import("Glb.zig");

@@ -48,7 +48,7 @@ pub fn init(
     self.deform_vertices = try allocator.dupe(Mesh.Vertex, mesh.vertices);
     self.bind.vertex_buffers[0] = sg.makeBuffer(.{
         .size = @sizeOf(Mesh.Vertex) * mesh.vertices.len,
-        .usage = .STREAM,
+        .usage = .{ .stream_update = true },
         .label = "deform-vertices",
     });
     self.bind.index_buffer = mesh.bind.index_buffer;

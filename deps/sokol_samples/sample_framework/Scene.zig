@@ -26,7 +26,7 @@ const ambient = [3]f32{ 0.2, 0.2, 0.2 };
 allocator: std.mem.Allocator = undefined,
 meshes: []Mesh = &.{},
 pip: sg.Pipeline = undefined,
-gltf: ?std.json.Parsed(zigltf.Gltf) = null,
+gltf: ?std.json.Parsed(zigltf.types.Gltf) = null,
 white_texture: Texture = undefined,
 animations: []Animation = &.{},
 current_animation: ?usize = null,
@@ -64,10 +64,10 @@ pub fn deinit(self: *@This()) void {
 
 pub fn load(
     self: *@This(),
-    json: std.json.Parsed(zigltf.Gltf),
+    json: std.json.Parsed(zigltf.types.Gltf),
     binmap: ?std.StringHashMap([]const u8),
 ) !void {
-    std.debug.print("{s}\n", .{json.value});
+    // std.debug.print("{s}\n", .{json.value});
     self.gltf = json;
 
     var gltf_buffer = zigltf.GltfBuffer.init(
@@ -83,20 +83,20 @@ pub fn load(
 
 fn load_mesh(
     self: *@This(),
-    gltf: zigltf.Gltf,
+    gltf: zigltf.types.Gltf,
     gltf_buffer: *zigltf.GltfBuffer,
 ) !void {
     self.meshes = try self.allocator.alloc(Mesh, gltf.meshes.len);
 
-    var submeshes = std.ArrayList(Mesh.Submesh).init(self.allocator);
+    var submeshes = std.array_list.Managed(Mesh.Submesh).init(self.allocator);
     defer submeshes.deinit();
-    var mesh_vertices = std.ArrayList(Mesh.Vertex).init(self.allocator);
+    var mesh_vertices = std.array_list.Managed(Mesh.Vertex).init(self.allocator);
     defer mesh_vertices.deinit();
-    var skin_vertices = std.ArrayList(Mesh.SkinVertex).init(self.allocator);
+    var skin_vertices = std.array_list.Managed(Mesh.SkinVertex).init(self.allocator);
     defer skin_vertices.deinit();
-    var mesh_indices = std.ArrayList(u16).init(self.allocator);
+    var mesh_indices = std.array_list.Managed(u16).init(self.allocator);
     defer mesh_indices.deinit();
-    var targets = std.ArrayList(Mesh.MorphTarget).init(self.allocator);
+    var targets = std.array_list.Managed(Mesh.MorphTarget).init(self.allocator);
     defer targets.deinit();
 
     self.node_deforms = try self.allocator.alloc(Deform, gltf.nodes.len);
@@ -228,7 +228,7 @@ fn load_mesh(
                 const material = if (primitive.material) |material_index|
                     gltf.materials[material_index]
                 else
-                    zigltf.Material.default;
+                    zigltf.types.Material.default;
 
                 var color: [4]f32 = .{ 1, 1, 1, 1 };
                 if (material.pbrMetallicRoughness) |pbr| {
@@ -348,7 +348,7 @@ fn load_mesh(
     }
 }
 
-fn getSourceOrKtx(texture: zigltf.Texture) ?u32 {
+fn getSourceOrKtx(texture: zigltf.types.Texture) ?u32 {
     if (texture.extensions) |extensions| {
         if (extensions.KHR_texture_basisu) |basisu| {
             return basisu.source;
@@ -359,14 +359,14 @@ fn getSourceOrKtx(texture: zigltf.Texture) ?u32 {
 
 fn load_animation(
     self: *@This(),
-    gltf: zigltf.Gltf,
+    gltf: zigltf.types.Gltf,
     gltf_buffer: *zigltf.GltfBuffer,
 ) !void {
     if (gltf.animations.len > 0) {
-        var animations = std.ArrayList(Animation).init(self.allocator);
+        var animations = std.array_list.Managed(Animation).init(self.allocator);
 
         for (gltf.animations) |gltf_animation| {
-            var curves = std.ArrayList(Animation.Curve).init(self.allocator);
+            var curves = std.array_list.Managed(Animation.Curve).init(self.allocator);
             var duration: f32 = 0;
 
             for (gltf_animation.channels) |channel| {
@@ -450,7 +450,7 @@ fn load_animation(
     _ = self.update(0);
 }
 
-fn to_sokol_sampler(_src: ?zigltf.Sampler) ?sg.SamplerDesc {
+fn to_sokol_sampler(_src: ?zigltf.types.Sampler) ?sg.SamplerDesc {
     if (_src) |src| {
         return .{
             .wrap_u = if (src.wrapS) |wrapS| to_sokol_wrap(wrapS) else .REPEAT,
@@ -470,14 +470,14 @@ fn to_sokol_sampler(_src: ?zigltf.Sampler) ?sg.SamplerDesc {
     }
 }
 
-fn to_sokol_wrap(src: zigltf.Sampler.WrapMode) sg.Wrap {
+fn to_sokol_wrap(src: zigltf.types.Sampler.WrapMode) sg.Wrap {
     return switch (src) {
         .CLAMP_TO_EDGE => .CLAMP_TO_EDGE,
         .MIRRORED_REPEAT => .MIRRORED_REPEAT,
         .REPEAT => .REPEAT,
     };
 }
-fn to_sokol_minFilter(src: zigltf.Sampler.MinFilter) sg.Filter {
+fn to_sokol_minFilter(src: zigltf.types.Sampler.MinFilter) sg.Filter {
     return switch (src) {
         .NEAREST => .NEAREST,
         .LINEAR => .LINEAR,
@@ -487,7 +487,7 @@ fn to_sokol_minFilter(src: zigltf.Sampler.MinFilter) sg.Filter {
         .LINEAR_MIPMAP_LINEAR => .LINEAR, //.LINEAR_MIPMAP_LINEAR,
     };
 }
-fn to_sokol_magFilter(src: zigltf.Sampler.MagFilter) sg.Filter {
+fn to_sokol_magFilter(src: zigltf.types.Sampler.MagFilter) sg.Filter {
     return switch (src) {
         .NEAREST => .NEAREST,
         .LINEAR => .LINEAR,
@@ -569,7 +569,7 @@ pub fn update(self: *@This(), time: f32) ?f32 {
 
 fn update_node_matrix(
     self: *@This(),
-    gltf: zigltf.Gltf,
+    gltf: zigltf.types.Gltf,
     node_index: u32,
     parent_matrix: Mat4,
 ) void {
@@ -624,7 +624,7 @@ pub fn draw(self: *@This(), camera: Camera) void {
 
 fn draw_node(
     self: *@This(),
-    gltf: zigltf.Gltf,
+    gltf: zigltf.types.Gltf,
     vp: Mat4,
     node_index: u32,
 ) void {
@@ -680,7 +680,7 @@ fn draw_mesh(
             sg.asRange(&submesh.submesh_params),
         );
 
-        bind.images = submesh.color_texture.fs_images;
+        bind.views = submesh.color_texture.fs_views;
         bind.samplers = submesh.color_texture.fs_samplers;
         sg.applyBindings(bind.*);
 

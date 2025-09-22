@@ -4,13 +4,13 @@ const shader = @import("gltf.glsl.zig");
 const Image = @import("Image.zig");
 
 pub const Texture = @This();
-fs_images: [16]sg.Image = [_]sg.Image{.{}} ** 16,
+fs_views: [28]sg.View = [_]sg.View{.{}} ** 28,
 fs_samplers: [16]sg.Sampler = [_]sg.Sampler{.{}} ** 16,
 
 pub fn init(image: Image, _sampler: ?sg.SamplerDesc) @This() {
     // init sokol
     var texture = Texture{};
-    texture.fs_images[shader.IMG_colorTexture2D] = sg.allocImage();
+    texture.fs_views[shader.VIEW_colorTexture2D] = sg.allocView();
     texture.fs_samplers[shader.SMP_colorTextureSmp] = sg.allocSampler();
     sg.initSampler(
         texture.fs_samplers[shader.SMP_colorTextureSmp],
@@ -33,11 +33,17 @@ pub fn init(image: Image, _sampler: ?sg.SamplerDesc) @This() {
         // set pixel_format to RGBA8 for WebGL
         .pixel_format = .RGBA8,
     };
-    img_desc.data.subimage[0][0] = .{
+    img_desc.data.mip_levels[0] = .{
         .ptr = &image.pixels[0],
         .size = image.byteLength(),
     };
-    sg.initImage(texture.fs_images[shader.IMG_colorTexture2D], img_desc);
+
+    const img = sg.makeImage(img_desc);
+    // state.allocator.free(state.pixels);
+    // state.pixels = &.{};
+    sg.initView(texture.fs_views[shader.VIEW_colorTexture2D], .{
+        .texture = .{ .image = img },
+    });
 
     return texture;
 }

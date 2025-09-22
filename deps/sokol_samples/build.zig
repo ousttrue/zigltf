@@ -46,8 +46,9 @@ pub fn build(b: *std.Build) void {
     }
     {
         const test_models = b.dependency("gltf-test-models", .{});
-        const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
-        _ = asset_wf.addCopyDirectory(wf.getDirectory(), "glTF-Sample-Assets", .{});
+        // const wf = test_models.namedWriteFiles("glTF-Sample-Assets");
+        // _ = asset_wf.addCopyDirectory(wf.getDirectory(), "glTF-Sample-Assets", .{});
+        _ = asset_wf.addCopyDirectory(test_models.path("glTF-Sample-Assets/Models"), "glTF-Sample-Assets", .{});
     }
     {
         const test_models = b.dependency("univrm", .{});
@@ -62,11 +63,13 @@ pub fn build(b: *std.Build) void {
     }
 
     // sample_framework
-    const sample_framework = b.addStaticLibrary(.{
-        .target = target,
-        .optimize = optimize,
+    const sample_framework = b.addLibrary(.{
         .name = "sample_framework",
-        .root_source_file = b.path("sample_framework/main.zig"),
+        .root_module = b.addModule("sample_framework", .{
+            .target = target,
+            .optimize = optimize,
+            .root_source_file = b.path("sample_framework/main.zig"),
+        }),
     });
     // generate .glsl.zig
     const shdc = sokol_tool.runShdcCommand(
@@ -78,7 +81,7 @@ pub fn build(b: *std.Build) void {
     sample_framework.root_module.addImport("sokol", sokol_dep.module("sokol"));
     sample_framework.root_module.addImport("zigltf", zigltf_dep.module("zigltf"));
     sample_framework.root_module.addImport("rowmath", rowmath_dep.module("rowmath"));
-    if (!target.result.isWasm()) {
+    if (!target.result.cpu.arch.isWasm()) {
         const stb_dep = b.dependency("stb", .{});
         sample_framework.addIncludePath(stb_dep.path(""));
         sample_framework.addCSourceFile(.{
@@ -88,7 +91,7 @@ pub fn build(b: *std.Build) void {
 
     // create a build step which invokes the Emscripten linker
     var emsdk_dep_: ?*std.Build.Dependency = null;
-    if (target.result.isWasm()) {
+    if (target.result.cpu.arch.isWasm()) {
         const emsdk_zig_dep = b.dependency("emsdk-zig", .{});
         const emsdk_dep = emsdk_zig_dep.builder.dependency("emsdk", .{});
         emsdk_dep_ = emsdk_dep;
@@ -97,20 +100,24 @@ pub fn build(b: *std.Build) void {
     b.default_step.dependOn(&wasm_wf.step);
 
     for (samples) |sample| {
-        const compiled = if (target.result.isWasm()) block: {
-            const lib = b.addStaticLibrary(.{
-                .target = target,
-                .optimize = optimize,
+        const compiled = if (target.result.cpu.arch.isWasm()) block: {
+            const lib = b.addLibrary(.{
                 .name = sample.name,
-                .root_source_file = b.path(sample.root_source_file),
+                .root_module = b.addModule(sample.name, .{
+                    .target = target,
+                    .optimize = optimize,
+                    .root_source_file = b.path(sample.root_source_file),
+                }),
             });
             break :block lib;
         } else block: {
             const exe = b.addExecutable(.{
-                .target = target,
-                .optimize = optimize,
                 .name = sample.name,
-                .root_source_file = b.path(sample.root_source_file),
+                .root_module = b.addModule(sample.name, .{
+                    .target = target,
+                    .optimize = optimize,
+                    .root_source_file = b.path(sample.root_source_file),
+                }),
             });
 
             // install artifact
@@ -126,7 +133,7 @@ pub fn build(b: *std.Build) void {
         compiled.root_module.addImport("framework", sample_framework.root_module);
         compiled.step.dependOn(&sample_framework.step);
 
-        if (target.result.isWasm()) {
+        if (target.result.cpu.arch.isWasm()) {
             // create a build step which invokes the Emscripten linker
             const emsdk_dep = emsdk_dep_.?;
             const emcc = try emsdk_zig.emLinkCommand(b, emsdk_dep, .{
@@ -136,7 +143,7 @@ pub fn build(b: *std.Build) void {
                 .use_webgl2 = true,
                 .use_emmalloc = true,
                 .use_filesystem = true,
-                .shell_file_path = sokol_dep.path("src/sokol/web/shell.html").getPath(b),
+                .shell_file_path = sokol_dep.path("src/sokol/web/shell.html"),
                 .release_use_closure = false,
                 .extra_before = &emcc_extra_args,
             });
@@ -166,62 +173,62 @@ pub const samples = [_]Sample{
         .name = "minimal",
         .root_source_file = "tutorials/minimal/main.zig",
     },
-    .{
-        .name = "sparse",
-        .root_source_file = "tutorials/sparse/main.zig",
-    },
-    .{
-        .name = "animation",
-        .root_source_file = "tutorials/animation/main.zig",
-    },
-    .{
-        .name = "simple_meshes",
-        .root_source_file = "tutorials/simple_meshes/main.zig",
-    },
-    .{
-        .name = "simple_material",
-        .root_source_file = "tutorials/simple_material/main.zig",
-    },
-    .{
-        .name = "simple_texture",
-        .root_source_file = "tutorials/simple_texture/main.zig",
-    },
-    .{
-        .name = "camera",
-        .root_source_file = "tutorials/camera/main.zig",
-    },
-    .{
-        .name = "morphtarget",
-        .root_source_file = "tutorials/morphtarget/main.zig",
-    },
-    .{
-        .name = "skin",
-        .root_source_file = "tutorials/skin/main.zig",
-    },
-    //
-    .{
-        .name = "glb",
-        .root_source_file = "glb/main.zig",
-    },
-    .{
-        .name = "gltf",
-        .root_source_file = "gltf/main.zig",
-    },
-    // extensions
-    .{
-        .name = "draco",
-        .root_source_file = "extensions/draco/main.zig",
-    },
-    .{
-        .name = "basisu",
-        .root_source_file = "extensions/basisu/main.zig",
-    },
-    .{
-        .name = "vrm0",
-        .root_source_file = "extensions/vrm0/main.zig",
-    },
-    .{
-        .name = "vrm1",
-        .root_source_file = "extensions/vrm1/main.zig",
-    },
+    // .{
+    //     .name = "sparse",
+    //     .root_source_file = "tutorials/sparse/main.zig",
+    // },
+    // .{
+    //     .name = "animation",
+    //     .root_source_file = "tutorials/animation/main.zig",
+    // },
+    // .{
+    //     .name = "simple_meshes",
+    //     .root_source_file = "tutorials/simple_meshes/main.zig",
+    // },
+    // .{
+    //     .name = "simple_material",
+    //     .root_source_file = "tutorials/simple_material/main.zig",
+    // },
+    // .{
+    //     .name = "simple_texture",
+    //     .root_source_file = "tutorials/simple_texture/main.zig",
+    // },
+    // .{
+    //     .name = "camera",
+    //     .root_source_file = "tutorials/camera/main.zig",
+    // },
+    // .{
+    //     .name = "morphtarget",
+    //     .root_source_file = "tutorials/morphtarget/main.zig",
+    // },
+    // .{
+    //     .name = "skin",
+    //     .root_source_file = "tutorials/skin/main.zig",
+    // },
+    // //
+    // .{
+    //     .name = "glb",
+    //     .root_source_file = "glb/main.zig",
+    // },
+    // .{
+    //     .name = "gltf",
+    //     .root_source_file = "gltf/main.zig",
+    // },
+    // // extensions
+    // .{
+    //     .name = "draco",
+    //     .root_source_file = "extensions/draco/main.zig",
+    // },
+    // .{
+    //     .name = "basisu",
+    //     .root_source_file = "extensions/basisu/main.zig",
+    // },
+    // .{
+    //     .name = "vrm0",
+    //     .root_source_file = "extensions/vrm0/main.zig",
+    // },
+    // .{
+    //     .name = "vrm1",
+    //     .root_source_file = "extensions/vrm1/main.zig",
+    // },
 };

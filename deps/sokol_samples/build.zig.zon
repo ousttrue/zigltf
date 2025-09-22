@@ -1,32 +1,31 @@
 .{
-    .name = "sokol_samples",
+    .minimum_zig_version = "0.15.1",
+    .fingerprint = 0xb33af0e331caf5ed,
+    .name = .sokol_samples,
     .version = "0.0.0",
     .dependencies = .{
+        .@"emsdk-zig" = .{
+            .url = "git+https://github.com/ousttrue/emsdk-zig.git#44e70d5d854273afed6d6c5e5c85d8f011ca6e0c",
+            .hash = "emsdk_zig-0.0.0-caLXQahAAACXnFVWQ4vt2aVulxU3GVCYVu1GvbLHClpx",
+        },
         .zigltf = .{
             .path = "../zigltf",
         },
-        // custom sokol(-fPIC for wasm)
         .sokol = .{
-            .url = "git+https://github.com/ousttrue/sokol-zig.git#832406c9096ffa73b7082c81bf653fa613f7467a",
-            .hash = "1220e2f2b5b9b4abafaaf3785c262d8da11fb3a5376ebe10c46363d225e95545effa",
+            .url = "git+https://github.com/floooh/sokol-zig.git#f54f1b00aa2b2421f06422bd35a0930ff0b17197",
+            .hash = "sokol-0.1.0-pb1HKxdSLgC1cy3VKT18XqI35Yg_V5z7g090GkYtfBoV",
         },
-        // glsl => glsl.zig
-        .@"sokol-tools-bin" = .{
-            .url = "git+https://github.com/floooh/sokol-tools-bin.git#c37e6630a1a55141d813eae2bf17b6ef93e9867c",
-            .hash = "122007ff9e979a63058e3af1de1d8b98957baa741a8b779d50f9b251dca4acf60b41",
-        },
-        .@"emsdk-zig" = .{
-            .url = "git+https://github.com/ousttrue/emsdk-zig.git#9b937b26b79c42fae3a6a8d9c156f02ca612480d",
-            .hash = "1220ae63c6f473c034d9ba811e85fe918f85ae3020f33d2ee6b067c05954c72e7aec",
-        },
-        // camera etc
         .rowmath = .{
-            .url = "git+https://github.com/ousttrue/rowmath.git#b1d82f097e94d1eaa2c8b18180f10553e8dc45db",
-            .hash = "12209a003f1b957dc95faabf008bb53048de40324e8f3b1c8fcbf4933dc481844885",
+            .url = "git+https://github.com/ousttrue/rowmath.git#27d0f07e3f96d741c752b32e72284d64a7c2c72f",
+            .hash = "rowmath-0.0.0-LTUpSYRABACYW5NWbev_B-ke4k5tLd7_8nsZGbewovk3",
         },
         .@"gltf-test-models" = .{
-            .url = "git+https://github.com/ousttrue/gltf-test-models.git#d31c7c3d3c24554304ac43c902def569afd2b3c0",
-            .hash = "1220c97b53dc756f91e68315c364e9ab94cc9c6dbeaf3642e577872f0de08d3684bb",
+            .url = "git+https://github.com/ousttrue/gltf-test-models.git#8362d1bf7fee1dce7d541333380d3d9a7495d96b",
+            .hash = "N-V-__8AAItDCgJyveLNHMU2-JRMeMgOssyI9ZZI2X_DGx0u",
+        },
+        .univrm = .{
+            .url = "git+https://github.com/vrm-c/UniVRM.git#9e5d11be621c6349ad53b4f7fdc8cf9e52e7bbcd",
+            .hash = "122098e4ef97163fc7ba0ec63b6bec618a5fffead8e0e19e17a517cd05741f92a098",
         },
         .stb = .{
             .url = "git+https://github.com/nothings/stb.git#f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31",
@@ -40,9 +39,9 @@
             .url = "git+https://github.com/google/draco.git#f4e08970937303d3016b8d841fe9e6141a9b66a0",
             .hash = "12203bbaae27dde1346550405b678c29bbc6bae0db6e59fb5be1a20d5d51f454dc04",
         },
-        .univrm = .{
-            .url = "git+https://github.com/vrm-c/UniVRM.git#9e5d11be621c6349ad53b4f7fdc8cf9e52e7bbcd",
-            .hash = "122098e4ef97163fc7ba0ec63b6bec618a5fffead8e0e19e17a517cd05741f92a098",
+        .@"sokol-tools-bin" = .{
+            .url = "git+https://github.com/floooh/sokol-tools-bin.git#b2858f214eb333665d897741b48d3a55369304eb",
+            .hash = "sokolshdc-0.1.0-r2KZDl4hbAR-8mpq5AzUdZL5fKOxEQr6bm6MPm7X72PG",
         },
     },
     .paths = .{

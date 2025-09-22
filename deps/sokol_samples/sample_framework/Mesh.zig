@@ -64,7 +64,7 @@ pub fn init(
     });
     if (_indices) |indices| {
         mesh.bind.index_buffer = sg.makeBuffer(.{
-            .type = .INDEXBUFFER,
+            .usage = .{ .index_buffer = true },
             .data = sg.asRange(indices),
             .label = "gltf-indices",
         });
