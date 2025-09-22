@@ -46,7 +46,7 @@ export fn init() void {
 
 fn on_gltf(gltf: std.json.Parsed(zigltf.types.Gltf), bin: std.StringHashMap([]const u8)) void {
     state.gltf = gltf;
-    std.debug.print("{s}\n", .{gltf.value});
+    // std.debug.print("{s}\n", .{gltf.value});
     state.scene.load(gltf, bin) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});
         @panic("Scene.load");

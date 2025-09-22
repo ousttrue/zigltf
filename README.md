@@ -1,5 +1,7 @@
 # zigltf
 
+WIP `zig-0.15.1`
+
 zig gltf library.
 
 ## build

@@ -197,42 +197,42 @@ pub const samples = [_]Sample{
         .name = "simple_texture",
         .root_source_file = "tutorials/simple_texture/main.zig",
     },
-    // .{
-    //     .name = "camera",
-    //     .root_source_file = "tutorials/camera/main.zig",
-    // },
-    // .{
-    //     .name = "morphtarget",
-    //     .root_source_file = "tutorials/morphtarget/main.zig",
-    // },
-    // .{
-    //     .name = "skin",
-    //     .root_source_file = "tutorials/skin/main.zig",
-    // },
-    // //
-    // .{
-    //     .name = "glb",
-    //     .root_source_file = "glb/main.zig",
-    // },
-    // .{
-    //     .name = "gltf",
-    //     .root_source_file = "gltf/main.zig",
-    // },
-    // // extensions
-    // .{
-    //     .name = "draco",
-    //     .root_source_file = "extensions/draco/main.zig",
-    // },
-    // .{
-    //     .name = "basisu",
-    //     .root_source_file = "extensions/basisu/main.zig",
-    // },
-    // .{
-    //     .name = "vrm0",
-    //     .root_source_file = "extensions/vrm0/main.zig",
-    // },
-    // .{
-    //     .name = "vrm1",
-    //     .root_source_file = "extensions/vrm1/main.zig",
-    // },
+    .{
+        .name = "camera",
+        .root_source_file = "tutorials/camera/main.zig",
+    },
+    .{
+        .name = "morphtarget",
+        .root_source_file = "tutorials/morphtarget/main.zig",
+    },
+    .{
+        .name = "skin",
+        .root_source_file = "tutorials/skin/main.zig",
+    },
+    //
+    .{
+        .name = "glb",
+        .root_source_file = "glb/main.zig",
+    },
+    .{
+        .name = "gltf",
+        .root_source_file = "gltf/main.zig",
+    },
+    // extensions
+    .{
+        .name = "draco",
+        .root_source_file = "extensions/draco/main.zig",
+    },
+    .{
+        .name = "basisu",
+        .root_source_file = "extensions/basisu/main.zig",
+    },
+    .{
+        .name = "vrm0",
+        .root_source_file = "extensions/vrm0/main.zig",
+    },
+    .{
+        .name = "vrm1",
+        .root_source_file = "extensions/vrm1/main.zig",
+    },
 };
