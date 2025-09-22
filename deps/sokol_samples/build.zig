@@ -159,6 +159,10 @@ pub fn build(b: *std.Build) void {
                 "upstream/emscripten/cache/sysroot/include",
             );
             compiled.addSystemIncludePath(emsdk_incl_path);
+        } else {
+            const run = b.addRunArtifact(compiled);
+            const step = b.step(b.fmt("run-{s}", .{sample.name}), b.fmt("run {s}", .{sample.name}));
+            step.dependOn(&run.step);
         }
     }
 }
@@ -173,10 +177,10 @@ pub const samples = [_]Sample{
         .name = "minimal",
         .root_source_file = "tutorials/minimal/main.zig",
     },
-    // .{
-    //     .name = "sparse",
-    //     .root_source_file = "tutorials/sparse/main.zig",
-    // },
+    .{
+        .name = "sparse",
+        .root_source_file = "tutorials/sparse/main.zig",
+    },
     // .{
     //     .name = "animation",
     //     .root_source_file = "tutorials/animation/main.zig",

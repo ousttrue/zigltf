@@ -123,7 +123,7 @@ export fn init() void {
     // parse gltf
     const allocator = std.heap.c_allocator;
     const parsed = std.json.parseFromSlice(
-        zigltf.Gltf,
+        zigltf.types.Gltf,
         allocator,
         minimal_gltf,
         .{
