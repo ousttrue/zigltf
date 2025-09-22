@@ -78,7 +78,7 @@ fn fetch_buffer(index: u32, on_gltf: *const GltfCallback) !void {
         const buffer = parsed.value.buffers[index];
 
         if (buffer.uri) |uri| {
-            if (zigltf.Buffer.base64DecodeSize(uri)) |_| {
+            if (zigltf.types.Buffer.base64DecodeSize(uri)) |_| {
                 try fetch_buffer(index + 1, on_gltf);
             } else {
                 state.status = std.fmt.bufPrintZ(
@@ -97,9 +97,9 @@ fn fetch_buffer(index: u32, on_gltf: *const GltfCallback) !void {
 
                 // const base = ;
                 const uriz = if (std.fs.path.dirname(state.path)) |dir|
-                    try std.fmt.allocPrintZ(state.allocator, "{s}/{s}", .{ dir, uri })
+                    try std.fmt.allocPrintSentinel(state.allocator, "{s}/{s}", .{ dir, uri }, 0)
                 else
-                    try std.fmt.allocPrintZ(state.allocator, "{s}", .{uri});
+                    try std.fmt.allocPrintSentinel(state.allocator, "{s}", .{uri}, 0);
 
                 _ = sokol.fetch.send(.{
                     .path = &uriz[0],
@@ -124,7 +124,7 @@ fn fetch_image(index: u32, on_gltf: *const GltfCallback) !void {
         const image = parsed.value.images[index];
 
         if (image.uri) |uri| {
-            if (zigltf.Buffer.base64DecodeSize(uri)) |_| {
+            if (zigltf.types.Buffer.base64DecodeSize(uri)) |_| {
                 try fetch_image(index + 1, on_gltf);
             } else {
                 state.status = std.fmt.bufPrintZ(
@@ -143,9 +143,9 @@ fn fetch_image(index: u32, on_gltf: *const GltfCallback) !void {
 
                 // const base = ;
                 const uriz = if (std.fs.path.dirname(state.path)) |dir|
-                    try std.fmt.allocPrintZ(state.allocator, "{s}/{s}", .{ dir, uri })
+                    try std.fmt.allocPrintSentinel(state.allocator, "{s}/{s}", .{ dir, uri }, 0)
                 else
-                    try std.fmt.allocPrintZ(state.allocator, "{s}", .{uri});
+                    try std.fmt.allocPrintSentinel(state.allocator, "{s}", .{uri}, 0);
 
                 _ = sokol.fetch.send(.{
                     .path = &uriz[0],

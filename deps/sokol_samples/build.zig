@@ -193,10 +193,10 @@ pub const samples = [_]Sample{
         .name = "simple_material",
         .root_source_file = "tutorials/simple_material/main.zig",
     },
-    // .{
-    //     .name = "simple_texture",
-    //     .root_source_file = "tutorials/simple_texture/main.zig",
-    // },
+    .{
+        .name = "simple_texture",
+        .root_source_file = "tutorials/simple_texture/main.zig",
+    },
     // .{
     //     .name = "camera",
     //     .root_source_file = "tutorials/camera/main.zig",
