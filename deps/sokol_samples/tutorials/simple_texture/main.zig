@@ -104,7 +104,7 @@ const state = struct {
     var pass_action = sg.PassAction{};
     var input = rowmath.InputState{};
     var orbit = rowmath.OrbitCamera{};
-    var gltf: ?std.json.Parsed(zigltf.Gltf) = null;
+    var gltf: ?std.json.Parsed(zigltf.types.Gltf) = null;
     var scene = Scene{};
 };
 
@@ -133,7 +133,7 @@ export fn init() void {
     // parse gltf
     const allocator = std.heap.c_allocator;
     const parsed = std.json.parseFromSlice(
-        zigltf.Gltf,
+        zigltf.types.Gltf,
         allocator,
         minimal_gltf,
         .{
@@ -148,7 +148,7 @@ export fn init() void {
     framework.gltf_fetcher.set_gltf("tmp.gltf", parsed, null, &on_load) catch @panic("set_gltf");
 }
 
-fn on_load(parsed: std.json.Parsed(zigltf.Gltf), binmap: std.StringHashMap([]const u8)) void {
+fn on_load(parsed: std.json.Parsed(zigltf.types.Gltf), binmap: std.StringHashMap([]const u8)) void {
     // build
     state.scene.load(parsed, binmap) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});

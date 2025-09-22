@@ -4,7 +4,7 @@ const rowmath = @import("rowmath");
 const zigltf = @import("zigltf");
 
 const GltfCallback = fn (
-    gltf: std.json.Parsed(zigltf.Gltf),
+    gltf: std.json.Parsed(zigltf.types.Gltf),
     binmap: std.StringHashMap([]const u8),
 ) void;
 
@@ -32,7 +32,7 @@ pub const state = struct {
     var fetch_buffer: [1024 * 1024 * 32]u8 = undefined;
     //
     var path: []const u8 = undefined;
-    var json: std.json.Parsed(zigltf.Gltf) = undefined;
+    var json: std.json.Parsed(zigltf.types.Gltf) = undefined;
     var binmap: std.StringHashMap([]const u8) = undefined;
 };
 
@@ -174,7 +174,7 @@ fn get_glb(gltf_or_glb: []const u8) zigltf.Glb {
 
 pub fn set_gltf(
     path: []const u8,
-    parsed: std.json.Parsed(zigltf.Gltf),
+    parsed: std.json.Parsed(zigltf.types.Gltf),
     _bin: ?[]const u8,
     callback: *const GltfCallback,
 ) !void {
@@ -209,7 +209,7 @@ export fn fetch_callback(response: [*c]const sokol.fetch.Response) void {
                 const glb = get_glb(copy);
 
                 if (std.json.parseFromSlice(
-                    zigltf.Gltf,
+                    zigltf.types.Gltf,
                     state.allocator,
                     glb.json_bytes,
                     .{

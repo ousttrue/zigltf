@@ -12,7 +12,7 @@ const state = struct {
     var pass_action = sg.PassAction{};
     var input = rowmath.InputState{};
     var orbit = rowmath.OrbitCamera{};
-    var gltf: ?std.json.Parsed(zigltf.Gltf) = null;
+    var gltf: ?std.json.Parsed(zigltf.types.Gltf) = null;
     var scene = Scene{};
 };
 
@@ -44,7 +44,7 @@ export fn init() void {
     gltf_fetcher.fetch_gltf(load_file, &on_gltf) catch @panic("fetch_gltf");
 }
 
-fn on_gltf(gltf: std.json.Parsed(zigltf.Gltf), bin: std.StringHashMap([]const u8)) void {
+fn on_gltf(gltf: std.json.Parsed(zigltf.types.Gltf), bin: std.StringHashMap([]const u8)) void {
     state.gltf = gltf;
     state.scene.load(gltf, bin) catch |e| {
         std.debug.print("{s}\n", .{@errorName(e)});

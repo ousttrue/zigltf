@@ -146,7 +146,7 @@ const state = struct {
     var pass_action = sg.PassAction{};
     var input = rowmath.InputState{};
     var orbit = rowmath.OrbitCamera{};
-    var gltf: ?std.json.Parsed(zigltf.Gltf) = null;
+    var gltf: ?std.json.Parsed(zigltf.types.Gltf) = null;
     var scene = Scene{};
 };
 
@@ -176,7 +176,7 @@ export fn init() void {
     // parse gltf
     const allocator = std.heap.c_allocator;
     const parsed = std.json.parseFromSlice(
-        zigltf.Gltf,
+        zigltf.types.Gltf,
         allocator,
         minimal_gltf,
         .{
