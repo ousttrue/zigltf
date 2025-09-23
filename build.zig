@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
             .install_subdir = "web",
         });
 
-        if (target.result.isWasm()) {
+        if (target.result.cpu.arch.isWasm()) {
             const wasm_wf = samples_deps.namedWriteFiles("wasm");
             const wasm_install = b.addInstallDirectory(.{
                 .source_dir = wasm_wf.getDirectory(),
